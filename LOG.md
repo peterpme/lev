@@ -381,3 +381,21 @@ Added the first public API boundary:
 A live MPS request returned `exchange_via_app` from a hand-written three-option
 JSON request in approximately 492 ms. The endpoint currently supports `choice`
 only; `noul`, `score`, and official SDK compatibility are intentionally next.
+
+## 2026-09-21 — endpoint test correction
+
+The first API tests were too narrow: they tested Pydantic models and conversion
+functions directly, but never sent an HTTP request through `POST /v1/systemone`.
+That allowed an incorrect nested `{"input": ...}` example to reach the user
+without being caught.
+
+Replaced those tests with FastAPI `TestClient` tests that exercise the actual
+route using a tiny fake tokenizer/model:
+
+- the documented top-level `{state, questions}` request must return `200`;
+- the nested `{input: ...}` request must return `422` with missing `state` and
+  `questions` errors.
+
+The full suite now passes with eight tests. The fake model keeps this contract
+test fast and weight-free; the real checkpoint remains covered by the manual
+server request and evaluation commands.
