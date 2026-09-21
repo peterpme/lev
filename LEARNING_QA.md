@@ -480,3 +480,95 @@ logic was copied in simplified form.
 
 This is why Lev is small: it uses existing libraries for the hard general
 infrastructure and only writes the custom decision-model glue.
+
+## Does more training data always make the model better?
+
+Usually, more representative data helps, but not automatically. More examples
+can improve coverage of wording, domains, labels, and question shapes. Bad,
+duplicated, noisy, or contradictory data can fail to help or can make the model
+worse.
+
+Banking77 can produce a model that is very good on Banking77 and still fail on:
+
+- new domains;
+- new intent names;
+- unusual wording;
+- arbitrary option lists;
+- questions outside banking;
+- requests where none of the options is correct.
+
+The current 88.67% result is therefore an in-distribution Banking77 result, not
+proof that Lev understands arbitrary decisions.
+
+## Is Banking77 a closed-world task?
+
+Mostly. The training data repeatedly presents the same 77 banking intents, so
+the strongest evidence is for those known categories.
+
+Architecturally, Lev can score a new option string because its pointer head reads
+the supplied option representation rather than using a fixed 77-class output
+layer. For example, it can accept:
+
+```text
+exchange_in_person_on_one_leg
+```
+
+without adding a new output neuron. But it may not understand that novel intent
+reliably. It may use Qwen's general language knowledge, the option description,
+and whatever related patterns LoRA learned.
+
+If a request supplies only one option, softmax gives that option probability 1.
+That does not mean it is correct. Robust unknown handling requires explicit
+`None of the above`/abstention examples, confidence thresholds, calibration,
+and out-of-domain evaluation.
+
+## Could we benchmark generalization?
+
+Yes. A useful benchmark would separate several questions instead of reporting
+one number:
+
+```text
+in-distribution Banking77 test accuracy
+new wording of known Banking77 intents
+held-out intent categories
+new domains such as AG News or MNLI
+novel option names with descriptions
+option-order stability
+irrelevant-option/IIA behavior
+none-of-the-above rejection
+confidence calibration and NLL
+```
+
+The benchmark would keep training, development, and locked test examples
+separate. It would report accuracy, NLL, calibration error, abstention quality,
+and confusion matrices by source. That would tell us whether more data improves
+general decision behavior or only memorization of Banking77.
+
+## What does the FastAPI layer do?
+
+The FastAPI layer is the public interface around the existing model. It does not
+train Qwen and it does not ask Qwen to generate JSON.
+
+At server startup it loads the base Qwen model, LoRA adapter, pointer head, and
+tokenizer once. For each request it:
+
+1. Validates the incoming TypeSafe-shaped JSON with Pydantic.
+2. Renders JSON values into the internal text representation.
+3. Tokenizes and packs the state, question, and options.
+4. Runs Qwen, LoRA, and the pointer head.
+5. Applies softmax to obtain probabilities.
+6. Maps option positions back to names.
+7. Returns deterministic JSON built by Python.
+
+The first endpoint is:
+
+```text
+POST /v1/systemone
+```
+
+It supports `choice` questions only for now. The implementation is in
+`lev/api.py` and `lev/serve.py`. The README contains a `curl` example.
+
+The model returns tensors, not a Python dictionary. The API wrapper constructs
+the dictionary and FastAPI serializes it as JSON. This avoids depending on a
+language model to generate syntactically valid JSON.

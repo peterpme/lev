@@ -354,6 +354,8 @@ The next useful steps are intentionally sequential:
 - `lev/data.py`: Hugging Face loading, Kev-style transformation, and augmentation.
 - `lev/model.py`: tokenizer packing, block-causal mask, Qwen backbone, LoRA, and pointer head.
 - `lev/train.py`: loss, optimizer, scheduler, MPS training, and checkpoint saving.
+- `lev/api.py`: Pydantic request/response models and JSON/tensor conversion.
+- `lev/serve.py`: choice-only FastAPI server.
 - `lev/render.py`: inspect a transformed row before tokenization.
 - `scripts/train-background.sh`: detached training launcher.
 - `tests/`: small tests for each core mechanism.
@@ -364,3 +366,18 @@ The next useful steps are intentionally sequential:
 - Qwen model: <https://huggingface.co/Qwen/Qwen2.5-0.5B>
 - Banking77 Hub copy: <https://huggingface.co/datasets/legacy-datasets/banking77>
 - Banking77 paper: <https://arxiv.org/abs/2003.04807>
+
+## 2026-09-21 — choice-only FastAPI layer
+
+Added the first public API boundary:
+
+- `lev/api.py` defines Pydantic request/response models, JSON rendering, and
+  tensor-to-named-answer conversion.
+- `lev/serve.py` loads the base model, LoRA adapter, pointer head, and tokenizer
+  once at startup and exposes `POST /v1/systemone`.
+- `uv sync --extra serve` installs FastAPI and Uvicorn.
+- Nine tests pass, including request validation and response mapping.
+
+A live MPS request returned `exchange_via_app` from a hand-written three-option
+JSON request in approximately 492 ms. The endpoint currently supports `choice`
+only; `noul`, `score`, and official SDK compatibility are intentionally next.

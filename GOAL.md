@@ -10,7 +10,7 @@ Given one customer message and a list of possible choices, return one probabilit
 
 Do not build yet:
 
-- TypeSafe API compatibility
+- full TypeSafe API compatibility (`noul` and `score` remain later)
 - six datasets
 - production serving
 - calibration systems
@@ -31,10 +31,10 @@ Do not build yet:
 8. Produce one score and probability for every option. ✅
 9. Train on a tiny sample until the model can overfit it.
 10. Train rank-16 LoRA with Kev's target modules. ✅
-11. Train a small Banking77 experiment. ✅ (40-row smoke complete; 1,500-row run active)
-12. Evaluate accuracy and inspect predicted probabilities. ✅ (pipeline proven; meaningful model pending)
+11. Train a small Banking77 experiment. ✅
+12. Evaluate accuracy and inspect predicted probabilities. ✅ (88.67% on 150 held-out rows)
 13. Add multiple questions and Kev's question-isolation mask. ✅ (mask implemented and tested)
-14. Only then consider TypeSafe-compatible input/output.
+14. Add a TypeSafe-compatible `choice` input/output layer. ✅
 15. Add `noul`, `score`, serving, and more datasets later.
 
 ## Definition of done
@@ -43,3 +43,8 @@ Lev is successful when it can load Banking77 through Hugging Face, train on a ti
 
 That first definition of done is now satisfied. The active next milestone is useful
 held-out Banking77 accuracy from the 1,500-example run.
+
+The first `choice` API milestone is also complete. `lev.serve` accepts
+`POST /v1/systemone`, validates requests with Pydantic, runs the saved checkpoint,
+and returns named probabilities. `noul`, `score`, and full SDK compatibility
+remain future work.

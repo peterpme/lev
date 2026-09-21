@@ -10,6 +10,8 @@ from typing import Any
 
 from datasets import load_dataset
 
+from .api import render as render_value
+
 DATASET_NAME = "legacy-datasets/banking77"
 QUESTION_TEXT = "Which banking intent best describes this customer message?"
 NONE = "None of the above"
@@ -25,25 +27,6 @@ BANK_TEMPLATES = [
     "Request related to {}",
     "{}",
 ]
-
-
-def render_value(value: Any, indent: int = 0) -> str:
-    """Flatten JSON-like content the same way Kev's request path does."""
-    pad = "  " * indent
-    if value is None:
-        return ""
-    if isinstance(value, (str, int, float, bool)):
-        return str(value)
-    if isinstance(value, list):
-        return "\n".join(
-            f"{pad}- {render_value(item, indent + 1).lstrip()}" for item in value
-        )
-    return "\n".join(
-        f"{pad}{key}:\n{render_value(item, indent + 1)}"
-        if isinstance(item, (dict, list))
-        else f"{pad}{key}: {render_value(item)}"
-        for key, item in value.items()
-    )
 
 
 def _wrap_state(text: str, rng: random.Random) -> Any:

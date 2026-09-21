@@ -80,6 +80,49 @@ HF_HUB_DISABLE_IMPLICIT_TOKEN=1 uv run python -m lev.evaluate \
 This writes `runs/banking77-smoke/eval.json`. A 40-row smoke run only proves the
 pipeline works; it is far too small to expect useful accuracy.
 
+## Try the TypeSafe-shaped API
+
+Install the serving dependencies:
+
+```bash
+uv sync --extra serve
+```
+
+Start Lev with the trained checkpoint:
+
+```bash
+HF_HUB_DISABLE_IMPLICIT_TOKEN=1 uv run --extra serve \
+  python -m lev.serve \
+  --run runs/banking77-1500 \
+  --port 8008
+```
+
+In another terminal, send a choice request:
+
+```bash
+curl http://127.0.0.1:8008/v1/systemone \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "state": "I need to exchange currencies using my mobile banking app.",
+    "questions": {
+      "intent": {
+        "type": "choice",
+        "instructions": "Which banking intent best describes this request?",
+        "criteria": {
+          "activate_my_card": "Activating a card",
+          "exchange_via_app": "Exchanging currencies in the app",
+          "cash_withdrawal": "Taking out cash"
+        }
+      }
+    }
+  }'
+```
+
+The server loads the checkpoint once, validates the JSON with Pydantic, renders
+it into Lev's internal text/token representation, runs the pointer model, and
+maps probabilities back to named JSON. This first endpoint supports `choice`
+only; `noul`, `score`, and the full SDK compatibility layer come later.
+
 For a larger run:
 
 ```bash
