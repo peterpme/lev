@@ -445,3 +445,15 @@ The verifier found that the API section referenced `runs/banking77-1500` before
 the README showed how to create it. The API instructions now use the earlier
 `runs/banking77-smoke` checkpoint, with the larger run offered as an explicit
 follow-up.
+
+## 2026-09-21 — public README rewrite
+
+Rewrote `README.md` for a general internet user rather than this development
+machine. Removed machine-specific Hugging Face environment notes and detailed
+tmux instructions from the main path. The README now has:
+
+- a short TL;DR of Qwen 0.5B, LoRA, the pointer head, probabilities, and JSON;
+- a simple install → train → evaluate → serve flow;
+- a compact explanation of tokenization and the model pipeline;
+- the stable benchmark command;
+- links to `LEARNING_QA.md`, the goal, Kev, and Banking77.

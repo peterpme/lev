@@ -1,108 +1,90 @@
 # Lev
 
-Lev is a small, educational reimplementation of Kev's original Qwen2.5-0.5B decision model.
+Lev is a small, educational decision model inspired by [Kev](https://github.com/jaredpalmer/kev).
+It adapts the small [`Qwen/Qwen2.5-0.5B`](https://huggingface.co/Qwen/Qwen2.5-0.5B)
+language model to answer structured multiple-choice questions.
 
-The first milestone is deliberately narrow:
+The first version intentionally uses one dataset:
 
 ```text
-Banking77 message + 77 intents -> probability for every intent
+Banking77 message + 77 banking intents → one probability per intent
 ```
 
-Lev uses the same core mechanism as Kev's first commit: a Qwen2.5-0.5B backbone, rank-16 LoRA, a block-causal question mask, and a learned pointer head. It does not generate text.
+Lev does not generate an answer as prose. It scores the choices supplied by the
+caller and returns JSON.
 
-## Setup
+## TL;DR
 
-Requires Python 3.12 or 3.13 and `uv`.
+- Qwen 0.5B provides general language understanding.
+- LoRA makes a small, efficient adaptation to Lev's decision format.
+- A pointer head produces one score for each supplied option.
+- Softmax turns those scores into probabilities.
+- FastAPI returns the selected option and its probabilities.
+
+This is a learning project and a working prototype, not a production decision
+system.
+
+## Quick start
+
+You need Python 3.12 or 3.13 and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-uv sync --python 3.13
+git clone https://github.com/peterpme/lev.git
+cd lev
+uv sync --extra serve
 ```
 
-The public dataset and model are loaded from the Hugging Face Hub. This machine has a stale implicit Hub login, so commands below disable implicit authentication while accessing public assets.
+The first run downloads Qwen and Banking77 from Hugging Face.
 
-## Inspect Banking77
+### 1. Train a small model
 
-Load and display one record directly from Hugging Face:
-
-```bash
-HF_HUB_DISABLE_IMPLICIT_TOKEN=1 uv run python -m lev.render
-```
-
-Optionally save a small inspection set:
+This smoke run is intentionally small and is mainly useful for verifying the
+pipeline:
 
 ```bash
-HF_HUB_DISABLE_IMPLICIT_TOKEN=1 uv run python -m lev.data \
+uv run python -m lev.train \
   --n_per_source 40 \
-  --out data/banking77-smoke.jsonl
+  --epochs 1 \
+  --accum 4 \
+  --out runs/banking77-smoke
 ```
 
-Training does not require JSONL; it loads and transforms Banking77 in memory, as Kev does.
-
-## Verify the model path
-
-This downloads Qwen2.5-0.5B, builds the LoRA adapter and pointer head, and performs one forward pass without training:
+Evaluate the saved checkpoint on held-out Banking77 examples:
 
 ```bash
-HF_HUB_DISABLE_IMPLICIT_TOKEN=1 uv run python -m lev.train \
-  --n_per_source 1 \
-  --dry_run
-```
-
-## Start a background smoke run
-
-```bash
-./scripts/train-background.sh
-```
-
-The default run trains on 40 Banking77 records for one epoch and writes:
-
-```text
-runs/banking77-smoke/train.log
-runs/banking77-smoke/train.pid
-runs/banking77-smoke/adapter_model.safetensors
-runs/banking77-smoke/head.pt
-```
-
-Watch it with:
-
-```bash
-tail -f runs/banking77-smoke/train.log
-```
-
-Reload the saved LoRA adapter and pointer head, then evaluate held-out rows:
-
-```bash
-HF_HUB_DISABLE_IMPLICIT_TOKEN=1 uv run python -m lev.evaluate \
+uv run python -m lev.evaluate \
   --run runs/banking77-smoke \
   --n 40
 ```
 
-This writes `runs/banking77-smoke/eval.json`. A 40-row smoke run only proves the
-pipeline works; it is far too small to expect useful accuracy.
-
-## Try the TypeSafe-shaped API
-
-Install the serving dependencies:
+For a more useful first model, train 1,500 examples for two epochs:
 
 ```bash
-uv sync --extra serve
+uv run python -m lev.train \
+  --n_per_source 1500 \
+  --epochs 2 \
+  --accum 8 \
+  --out runs/banking77-1500
 ```
 
-Start Lev with the trained checkpoint:
+The folder name is only a label: it identifies which training run the server
+should load.
+
+### 2. Start the API
 
 ```bash
-HF_HUB_DISABLE_IMPLICIT_TOKEN=1 uv run --extra serve \
-  python -m lev.serve \
+uv run python -m lev.serve \
   --run runs/banking77-smoke \
   --port 8008
 ```
 
-In another terminal, send a choice request:
+In another terminal:
 
 ```bash
-curl http://127.0.0.1:8008/v1/systemone \
+curl -s http://127.0.0.1:8008/v1/systemone \
   -H 'Content-Type: application/json' \
   -d '{
+    "model": "lev-latest",
     "state": "I need to exchange currencies using my mobile banking app.",
     "questions": {
       "intent": {
@@ -118,48 +100,69 @@ curl http://127.0.0.1:8008/v1/systemone \
   }'
 ```
 
-The server loads the checkpoint once, validates the JSON with Pydantic, renders
-it into Lev's internal text/token representation, runs the pointer model, and
-maps probabilities back to named JSON. This first endpoint supports `choice`
-only; `noul`, `score`, and the full SDK compatibility layer come later. After
-training the larger checkpoint below, replace the `--run` path with
-`runs/banking77-1500`.
+The response contains the selected option, a confidence summary, and the full
+probability distribution. Replace `runs/banking77-smoke` with
+`runs/banking77-1500` to serve the larger model.
 
-For a larger run:
+Useful local endpoints:
 
-```bash
-LEV_N_PER_SOURCE=1500 LEV_EPOCHS=2 LEV_ACCUM=8 \
-  ./scripts/train-background.sh runs/banking77-1500
+```text
+GET  /health
+GET  /v1/models
+POST /v1/systemone
 ```
 
-That matches Kev's released example count per source, but trains Banking77 only.
-Check whether its detached session is active with:
+Lev currently supports `choice` questions only. `noul` and `score` are future
+steps.
 
-```bash
-tmux has-session -t lev-banking77-1500 && echo running || echo finished
+## How does this work?
+
+1. Banking77 provides a customer message and its correct intent label.
+2. Lev turns that row into a request containing the message and all 77 intent
+   options.
+3. The tokenizer converts the request into token IDs.
+4. Qwen reads the state and question. Its original weights stay mostly frozen;
+   LoRA learns small updates to the transformer.
+5. The pointer head compares the question's decision representation with each
+   option representation and produces 77 scores.
+6. Softmax converts the scores into probabilities. Python maps those positions
+   back to the option names and returns JSON.
+
+```text
+JSON request → rendered text → tokens → Qwen + LoRA → pointer scores
+            → softmax probabilities → JSON response
 ```
 
-## First stable benchmark
+Qwen is not being trained from scratch, and it is not generating JSON. The
+Python API wrapper guarantees the response shape; the model supplies the
+probabilities.
 
-Lev's first stable benchmark is a fixed 150-record Banking77 test suite in
-`benchmarks/banking77-v1`. It is checked into the repository instead of being
-resampled from Hugging Face on every run. The manifest records the source,
-split, seed, option count, and checksum.
+## Stable benchmark
 
-Run it against a saved checkpoint with:
+The repository contains a fixed 150-example Banking77 test suite:
+[`benchmarks/banking77-v1`](benchmarks/banking77-v1).
+
+Run it against a checkpoint with:
 
 ```bash
-HF_HUB_DISABLE_IMPLICIT_TOKEN=1 uv run python -m lev.benchmark \
+uv run python -m lev.benchmark \
   --run runs/banking77-1500 \
   --suite benchmarks/banking77-v1 \
   --out runs/benchmarks/banking77-v1
 ```
 
-The report includes accuracy, NLL, Brier score, ECE, confidence at 90%,
-probability normalization, latency, and the benchmark checksums. Future model
-runs should be compared on this same suite before we add new datasets or a new
-benchmark version.
+The first larger Lev run scored 88% accuracy on this suite. The benchmark also
+reports NLL, Brier score, calibration error, confidence behavior, probability
+normalization, latency, and checksums. Future model changes should be compared
+against this same suite.
 
-## Current boundary
+## Learn more
 
-Banking77 Choice training comes first. TypeSafe API compatibility, `noul`, `score`, six-dataset training, calibration, and serving come later.
+- [Learning Q&A](LEARNING_QA.md) — questions and answers from the build, in plain language.
+- [Goal and milestones](GOAL.md) — what Lev includes and what remains.
+- [Kev's original prototype commit](https://github.com/jaredpalmer/kev/commit/d0e2b1fc4f9e410137b6b4ab7f7153fc52868a16).
+- [Banking77 on Hugging Face](https://huggingface.co/datasets/legacy-datasets/banking77).
+
+The Q&A covers tokenization, tensors, softmax, LoRA, the pointer head, labels,
+attention masks, confidence, evaluation, benchmarks, and why a small model can
+be confidently wrong.
