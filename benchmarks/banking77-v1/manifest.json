@@ -1,0 +1,13 @@
+{
+  "name": "banking77-v1",
+  "version": 1,
+  "dataset": "legacy-datasets/banking77",
+  "source_split": "test",
+  "test_file": "test.jsonl",
+  "records": 150,
+  "options": 77,
+  "seed": 1,
+  "augmentation": false,
+  "policy": "Fixed materialized records; no training, calibration, or augmentation data is used.",
+  "test_sha256": "5c7a81279040508a39632df4ccffb396ad987b1d1a15cc1cf0451d7cc90abeb0"
+}

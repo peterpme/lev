@@ -93,7 +93,7 @@ Start Lev with the trained checkpoint:
 ```bash
 HF_HUB_DISABLE_IMPLICIT_TOKEN=1 uv run --extra serve \
   python -m lev.serve \
-  --run runs/banking77-1500 \
+  --run runs/banking77-smoke \
   --port 8008
 ```
 
@@ -121,7 +121,9 @@ curl http://127.0.0.1:8008/v1/systemone \
 The server loads the checkpoint once, validates the JSON with Pydantic, renders
 it into Lev's internal text/token representation, runs the pointer model, and
 maps probabilities back to named JSON. This first endpoint supports `choice`
-only; `noul`, `score`, and the full SDK compatibility layer come later.
+only; `noul`, `score`, and the full SDK compatibility layer come later. After
+training the larger checkpoint below, replace the `--run` path with
+`runs/banking77-1500`.
 
 For a larger run:
 
@@ -136,6 +138,27 @@ Check whether its detached session is active with:
 ```bash
 tmux has-session -t lev-banking77-1500 && echo running || echo finished
 ```
+
+## First stable benchmark
+
+Lev's first stable benchmark is a fixed 150-record Banking77 test suite in
+`benchmarks/banking77-v1`. It is checked into the repository instead of being
+resampled from Hugging Face on every run. The manifest records the source,
+split, seed, option count, and checksum.
+
+Run it against a saved checkpoint with:
+
+```bash
+HF_HUB_DISABLE_IMPLICIT_TOKEN=1 uv run python -m lev.benchmark \
+  --run runs/banking77-1500 \
+  --suite benchmarks/banking77-v1 \
+  --out runs/benchmarks/banking77-v1
+```
+
+The report includes accuracy, NLL, Brier score, ECE, confidence at 90%,
+probability normalization, latency, and the benchmark checksums. Future model
+runs should be compared on this same suite before we add new datasets or a new
+benchmark version.
 
 ## Current boundary
 

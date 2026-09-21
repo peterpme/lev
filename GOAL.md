@@ -36,6 +36,7 @@ Do not build yet:
 13. Add multiple questions and Kev's question-isolation mask. ✅ (mask implemented and tested)
 14. Add a TypeSafe-compatible `choice` input/output layer. ✅
 15. Add `noul`, `score`, serving, and more datasets later.
+16. Freeze and report a reproducible Banking77 benchmark. ✅ `benchmarks/banking77-v1`.
 
 ## Definition of done
 

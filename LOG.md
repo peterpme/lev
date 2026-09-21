@@ -396,6 +396,52 @@ route using a tiny fake tokenizer/model:
 - the nested `{input: ...}` request must return `422` with missing `state` and
   `questions` errors.
 
-The full suite now passes with eight tests. The fake model keeps this contract
+The endpoint test subset has two tests, and the full suite now passes with ten
+tests. The fake model keeps this contract
 test fast and weight-free; the real checkpoint remains covered by the manual
 server request and evaluation commands.
+
+## 2026-09-21 — first stable benchmark
+
+The current Lev implementation was pushed to `https://github.com/peterpme/lev`.
+Created `benchmarks/banking77-v1` as the first stable evaluation suite. It
+contains 150 fixed, materialized Banking77 test records with 77 options each.
+The test file is checked by SHA-256 before evaluation, so future checkpoints
+are scored on exactly the same inputs.
+
+The new `lev.benchmark` command mirrors Kev's basic frozen-suite approach while
+staying intentionally small. It reports accuracy, NLL, Brier score, ECE,
+confidence-at-90%, probability normalization, latency, and suite checksums.
+
+The first stable result for `runs/banking77-1500` is:
+
+```json
+{
+  "accuracy": 0.88,
+  "nll": 0.5179050553930366,
+  "brier": 0.18762257634128635,
+  "ece": 0.040830138921737626,
+  "mean_confidence": 0.8812205415964126,
+  "confidence_at_0_9": {
+    "coverage": 0.6866666666666666,
+    "accuracy": 0.9805825242718447
+  }
+}
+```
+
+This gives us a baseline. Future changes should be compared against this suite
+before changing the benchmark or adding more datasets.
+
+## 2026-09-21 — README-only fresh-user verification
+
+A verification subagent followed the README workflow. With the existing local
+caches, it successfully rendered Banking77, ran the Qwen dry run, trained and
+reloaded a one-record CPU smoke checkpoint, and received HTTP 200 from the
+documented API request. A truly fresh clone still needs internet access for uv,
+Hugging Face Banking77, and Qwen downloads; this environment could not prove
+that network path because of DNS/cache restrictions.
+
+The verifier found that the API section referenced `runs/banking77-1500` before
+the README showed how to create it. The API instructions now use the earlier
+`runs/banking77-smoke` checkpoint, with the larger run offered as an explicit
+follow-up.
