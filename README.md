@@ -154,11 +154,13 @@ uv run python -m lev.benchmark \
 The first larger Lev run scored 88% accuracy on this suite. The benchmark also
 reports NLL, Brier score, calibration error, confidence behavior, probability
 normalization, latency, and checksums. Future model changes should be compared
-against this same suite.
+against this same suite. The checked-in baseline is
+[`baselines/lev-banking77-1500.json`](benchmarks/banking77-v1/baselines/lev-banking77-1500.json).
 
 ## Learn more
 
 - [Learning Q&A](LEARNING_QA.md) — questions and answers from the build, in plain language.
+- [Benchmarking guide](BENCHMARKING.md) — how to save results and iterate without overfitting the test set.
 - [Goal and milestones](GOAL.md) — what Lev includes and what remains.
 - [Kev's original prototype commit](https://github.com/jaredpalmer/kev/commit/d0e2b1fc4f9e410137b6b4ab7f7153fc52868a16).
 - [Banking77 on Hugging Face](https://huggingface.co/datasets/legacy-datasets/banking77).
