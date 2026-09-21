@@ -1,0 +1,23 @@
+[project]
+name = "lev"
+version = "0.1.0"
+description = "Educational typed decision model built on a small Qwen base"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "accelerate>=1.15.0",
+    "datasets==5.0.1",
+    "numpy>=2.5.3",
+    "peft>=0.15",
+    "scikit-learn>=1.9.1",
+    "torch>=2.6,<2.9",
+    "transformers>=4.51,<4.58",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
