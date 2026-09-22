@@ -93,6 +93,16 @@ LEV_SOURCES=banking77,boolq,agnews,mnli,sst5,yelp,trec,dbpedia14,imdb,amazon,arc
   ./scripts/train-background.sh runs/kev-thirteen-750
 ```
 
+For a repeatable expanded evaluation, first create a new frozen suite from the
+same held-out splits, then benchmark against it:
+
+```bash
+uv run python scripts/make_benchmark.py \
+  --sources banking77,boolq,agnews,mnli,sst5,yelp,trec,dbpedia14,imdb,amazon,arc,openbookqa,csqa \
+  --n_per_source 150 --name multi-source-v2 \
+  --out benchmarks/multi-source-v2
+```
+
 For a finance-specific experiment, Financial PhraseBank is also available as
 an optional source:
 

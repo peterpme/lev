@@ -543,3 +543,8 @@ experiment will train a controlled 13-source mixture and compare it against
 the frozen Banking77 and multi-source suites. More data may improve transfer,
 but it can also dilute Banking77 or introduce task conflicts, so the benchmark
 decides whether the change is useful.
+
+Added `scripts/make_benchmark.py` and `scripts/expanded-background.sh`. The
+expanded worker waits for the queued six-source experiment, freezes a separate
+13-source held-out suite, trains 750 examples per source for two epochs, and
+benchmarks Banking77, the original six-source suite, and the expanded suite.
