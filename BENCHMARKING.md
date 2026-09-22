@@ -21,8 +21,9 @@ locked test data → final, infrequent claim
 ```
 
 If we repeatedly choose models based on the locked test score, we gradually
-train on the test set indirectly. Lev therefore uses `banking77-v1` as a locked
-regression test and `multi-source-v1` as the broader generalization measurement.
+train on the test set indirectly. Lev therefore keeps Banking77 as a small
+regression test and uses Kev's broader development suites for generalist model
+selection.
 
 ## What is saved today?
 
@@ -117,6 +118,91 @@ Create a new benchmark version when the evaluation question changes:
 Never rewrite `banking77-v1`. Its purpose is to make progress and regressions
 visible over time.
 
+## Kev-compatible general benchmark
+
+Lev now includes pinned copies of the public fixtures used by Kev:
+
+- [`benchmarks/kev/decision-v7`](benchmarks/kev/decision-v7) is the main
+  decision suite. It has 1,204 development records / 1,468 questions and
+  1,176 locked-test records / 1,440 questions.
+- [`benchmarks/kev/transfer-v4`](benchmarks/kev/transfer-v4) is a transfer and
+  robustness suite. It is deliberately different from the public training
+  mixture.
+- [`benchmarks/kev/transfer-v9`](benchmarks/kev/transfer-v9) is the newer
+  transfer suite with additional held-out task families and robustness cases.
+
+Each record is a labelled TypeSafe-shaped request. A record can contain more
+than one question, so `lev.kev_benchmark` scores every question rather than
+silently scoring only the first one.
+
+The fixtures are pinned to a Kev commit and verified against Kev's manifest.
+To refresh them deliberately:
+
+```bash
+uv run python scripts/fetch_kev_suites.py \
+  --suite decision-v7 --suite transfer-v4 --suite transfer-v9 \
+  --split development --split test
+```
+
+Use development while experimenting:
+
+```bash
+uv run python -m lev.kev_benchmark \
+  --run runs/candidates/generalist-01 \
+  --suite benchmarks/kev/decision-v7 \
+  --split development \
+  --out runs/benchmarks/generalist-01-decision
+```
+
+The test partition is intentionally locked by the CLI. Run it only after a
+candidate is chosen:
+
+```bash
+uv run python -m lev.kev_benchmark \
+  --run runs/candidates/generalist-01 \
+  --suite benchmarks/kev/decision-v7 \
+  --split test --allow-test \
+  --out runs/benchmarks/generalist-01-decision-test
+```
+
+The report includes overall accuracy, NLL, macro source NLL, Brier score, ECE,
+confidence coverage, latency, per-source metrics, and per-question-type
+metrics. The most useful generalist primary metric is development macro source
+NLL: it gives each task family a voice instead of letting a large source
+dominate, and rewards assigning probability to the correct answer rather than
+merely winning by a tiny margin. Keep accuracy and confidence-at-90% as
+guardrails.
+
+## What to train next
+
+The target is not “maximize Banking77.” The target is a model that learns the
+decision format and transfers across tasks. The safe progression is:
+
+1. Keep `banking77-v1` as a regression test.
+2. Use `decision-v7` development as the primary model-selection suite.
+3. Use `transfer-v4` development as the out-of-domain guardrail.
+4. Train on the ten public source families Kev uses: AG News, Amazon reviews,
+   Banking77, BoolQ, DBPedia14, IMDb, MNLI, SST-5, TREC, and Yelp.
+5. Add synthetic policy/compositional examples only after the public mixture
+   is measured; those teach structured reasoning, not a new real-world label
+   taxonomy.
+6. Select one candidate, then run the locked test partitions once and save the
+   JSON reports with the model card.
+
+More data is not automatically better. A source can improve transfer while
+making a specific task worse, or teach shortcuts that hurt unknown examples.
+The suite tells us whether the mixture improved the behavior we actually care
+about.
+
+## Jev comparison
+
+Jev is a hosted reference model, not a second set of local weights in Kev. Kev
+can send the same frozen request records to Jev through its comparison helper
+and save the responses. Lev can do the same once a Jev/API credential is
+available, but the local Lev benchmark remains deterministic and reproducible
+without that external service. We should never mix a Jev score into Lev's
+training-selection metric; it is a reference line, not a label.
+
 ## What Kev adds
 
 Kev follows the same pattern at a larger research-preview scale. Its repository
@@ -126,7 +212,7 @@ configuration-only trials. It also tests behaviors that ordinary accuracy
 misses: changing option order, hiding evidence in another question, adding
 irrelevant options, and presenting unknowable examples.
 
-Lev currently has the first two frozen suites and per-source metrics. The Kev
-repository is the roadmap for future additions such as paired bootstrap
-comparisons, question-isolation checks, permutation robustness, and a separate
-transfer suite.
+Lev currently has the first two Kev-compatible frozen suites and per-source
+metrics. The Kev repository is the roadmap for future additions such as paired
+bootstrap comparisons, question-isolation checks, permutation robustness, and
+the newer transfer-v9 suite.

@@ -207,6 +207,11 @@ normalization, latency, and checksums. Future model changes should be compared
 against this same suite. The checked-in baseline is
 [`baselines/lev-banking77-1500.json`](benchmarks/banking77-v1/baselines/lev-banking77-1500.json).
 
+For general-purpose progress modeled on Kev, use the pinned Kev-compatible
+fixtures and development/test workflow in
+[`BENCHMARKING.md`](BENCHMARKING.md). Banking77-v1 remains a regression check;
+it is no longer the main definition of progress.
+
 ## Learn more
 
 - [Learning Q&A](LEARNING_QA.md) — questions and answers from the build, in plain language.

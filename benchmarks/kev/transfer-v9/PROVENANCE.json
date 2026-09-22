@@ -1,0 +1,11 @@
+{
+  "source": "jaredpalmer/kev",
+  "ref": "90990a5fac2995b9faa3190f7d437e84f2067768",
+  "suite": "transfer-v9",
+  "upstream_path": "evals/v9/transfer-v9",
+  "manifest_sha256": "3c4f0be94509a3612678bfd3a30fd99a8d0ca3c47ddfe7318075d95b2fa365e4",
+  "splits": [
+    "development",
+    "test"
+  ]
+}

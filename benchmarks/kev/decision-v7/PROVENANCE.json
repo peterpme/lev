@@ -1,0 +1,10 @@
+{
+  "source": "jaredpalmer/kev",
+  "ref": "90990a5fac2995b9faa3190f7d437e84f2067768",
+  "suite": "decision-v7",
+  "upstream_path": "evals/v7/decision-v7",
+  "manifest_sha256": "a8f50e481b7d90b97da049e0ff6a01cee2f1ed204aed61a8265af0edbb5514d2",
+  "splits": [
+    "development"
+  ]
+}

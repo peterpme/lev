@@ -94,6 +94,13 @@ the test bytes change. Reports include accuracy, NLL, Brier score, ECE,
 high-confidence coverage and accuracy, latency, probability normalization, and
 per-source accuracy/NLL.
 
+For general-purpose progress, the repository also includes pinned Kev-compatible
+fixtures under [`benchmarks/kev`](benchmarks/kev): `decision-v7` for development
+selection, `transfer-v4` as a transfer guardrail, and `transfer-v9` as a newer
+held-out transfer suite. These contain labelled TypeSafe-shaped requests, so
+they test the same decision interface rather than only one dataset's label
+names. Their locked test partitions are not for repeated hill-climbing.
+
 ### Reference results
 
 | Model | Banking77-v1 | Multi-source-v1 |
@@ -104,6 +111,11 @@ per-source accuracy/NLL.
 The six-source mixture improves mixed-task accuracy by 29.6 percentage points
 while losing 1.3 points on the original Banking77 suite. This is why Lev keeps
 both suites: one measures the original skill, the other measures generalization.
+
+The next generalist baseline should optimize development NLL on Kev's
+`decision-v7`, keep accuracy and confidence-at-90% as guardrails, and require
+no severe regression on `transfer-v4`. After selecting a candidate, run the
+locked test partitions once and save the reports with the model card.
 
 The durable experiment record is
 [`multi-six-1500.json`](benchmarks/banking77-v1/experiments/multi-six-1500.json).
