@@ -125,6 +125,8 @@ Lev now includes pinned copies of the public fixtures used by Kev:
 - [`benchmarks/kev/decision-v7`](benchmarks/kev/decision-v7) is the main
   decision suite. It has 1,204 development records / 1,468 questions and
   1,176 locked-test records / 1,440 questions.
+- [`benchmarks/kev/decision-v4`](benchmarks/kev/decision-v4) is retained for
+  reproducing the historical tiny Kev comparison.
 - [`benchmarks/kev/transfer-v4`](benchmarks/kev/transfer-v4) is a transfer and
   robustness suite. It is deliberately different from the public training
   mixture.
@@ -140,7 +142,7 @@ To refresh them deliberately:
 
 ```bash
 uv run python scripts/fetch_kev_suites.py \
-  --suite decision-v7 --suite transfer-v4 --suite transfer-v9 \
+  --suite decision-v4 --suite decision-v7 --suite transfer-v4 --suite transfer-v9 \
   --split development --split test
 ```
 

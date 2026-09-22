@@ -1,0 +1,11 @@
+{
+  "source": "jaredpalmer/kev",
+  "ref": "90990a5fac2995b9faa3190f7d437e84f2067768",
+  "suite": "decision-v4",
+  "upstream_path": "evals/v4/decision-v4",
+  "manifest_sha256": "1b33e566d114f9eafeff55b36c221fadb2a4ae358a1b9cc68006e82c7cfad8f1",
+  "splits": [
+    "development",
+    "test"
+  ]
+}

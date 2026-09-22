@@ -216,6 +216,7 @@ it is no longer the main definition of progress.
 
 - [Learning Q&A](LEARNING_QA.md) — questions and answers from the build, in plain language.
 - [Benchmarking guide](BENCHMARKING.md) — how to save results and iterate without overfitting the test set.
+- [Research plan](PLAN.md) — the tiny-model comparison matrix and registered experiments.
 - [Model card](MODEL_CARD.md) — training recipe, results, limitations, and reproduction steps.
 - [Goal and milestones](GOAL.md) — what Lev includes and what remains.
 - [Kev's original prototype commit](https://github.com/jaredpalmer/kev/commit/d0e2b1fc4f9e410137b6b4ab7f7153fc52868a16).

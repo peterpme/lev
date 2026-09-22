@@ -18,6 +18,7 @@ from urllib.request import Request, urlopen
 KEV_REPO = "https://raw.githubusercontent.com/jaredpalmer/kev"
 DEFAULT_REF = "90990a5fac2995b9faa3190f7d437e84f2067768"
 SUITES = {
+    "decision-v4": "evals/v4/decision-v4",
     "decision-v7": "evals/v7/decision-v7",
     "transfer-v4": "evals/v4/transfer-v4",
     "transfer-v9": "evals/v9/transfer-v9",
