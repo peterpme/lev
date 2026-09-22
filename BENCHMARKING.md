@@ -79,7 +79,11 @@ Create a new benchmark version when the evaluation question changes:
 
 - `banking77-v2`: different presentation or additional Banking77 cases;
 - `transfer-v1`: datasets Lev never trained on;
-- `multi-source-v1`: BoolQ, AG News, MNLI, SST-5, and Yelp after they are added.
+- `multi-source-v1`: the current six-source mixture: Banking77, BoolQ, AG News,
+  MNLI, SST-5, and Yelp.
+- `finance-v1`: a future finance-focused suite should be separate from the
+  general mixture; Financial PhraseBank is sentiment, not transaction-intent
+  classification, so it should not silently redefine the Banking77 target.
 
 Never rewrite `banking77-v1`. Its purpose is to make progress and regressions
 visible over time.
