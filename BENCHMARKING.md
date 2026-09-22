@@ -32,6 +32,11 @@ uv run python -m lev.benchmark \
 The benchmark refuses to run if the fixed test file has changed. Keep each
 candidate report so experiments can be compared later.
 
+Reports include headline accuracy, NLL, calibration, confidence, latency, and
+for mixed suites a `by_source` section with separate accuracy/NLL for each
+dataset. The headline number answers “did the mixture improve overall?” while
+the source breakdown answers “which task improved or regressed?”
+
 The companion [`multi-source-v1`](benchmarks/multi-source-v1) suite contains
 900 fixed held-out records: 150 from each of Kev's six sources. It uses one
 classification question per record and permits different option counts across
