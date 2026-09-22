@@ -44,5 +44,12 @@
       }
     }
   ],
-  "interpretation": "The larger six-source run is strong on the mixed benchmark but transfers slightly negatively to the locked Banking77-only benchmark: 86.7% versus the 88.0% Banking77-only baseline. More data is not automatically better when the task mixture, label spaces, and training budget change."
+  "comparison": {
+    "banking77_only_baseline_mixed_accuracy": 0.45111111111111113,
+    "six_source_mixed_accuracy": 0.7466666666666667,
+    "mixed_accuracy_delta": 0.29555555555555557,
+    "banking77_only_baseline_accuracy": 0.88,
+    "six_source_banking77_accuracy": 0.8666666666666667
+  },
+  "interpretation": "The larger six-source run improves mixed-task accuracy by 29.6 percentage points over the Banking77-only model (45.1% to 74.7%), while transferring slightly negatively to the locked Banking77-only benchmark (86.7% versus 88.0%). More data is substantially better for cross-task generalization here, but not automatically better for the original target task."
 }

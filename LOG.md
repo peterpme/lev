@@ -513,3 +513,10 @@ calibration ECE worsened from 0.041 to 0.098. On the 900-record
 result: adding heterogeneous datasets can improve mixed-task coverage without
 improving the original target task. The result is recorded in
 `benchmarks/banking77-v1/experiments/multi-six-1500.json`.
+
+The missing mixed-suite baseline is now measured: the Banking77-only model
+scored 45.1% on the same 900 records. Therefore the six-source run improves
+cross-task accuracy by 29.6 percentage points (45.1% → 74.7%), while retaining
+83.3% accuracy on the Banking77 slice inside the mixed suite. The source
+breakdown shows MNLI, SST-5, and Yelp are the weakest transfer tasks, so future
+hill climbs should target those rather than adding arbitrary datasets.

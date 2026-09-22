@@ -1,0 +1,32 @@
+{
+  "model": "lev-banking77-1500",
+  "training": {
+    "sources": ["banking77"],
+    "n_per_source": 1500,
+    "epochs": 2,
+    "gradient_accumulation": 8,
+    "base": "Qwen/Qwen2.5-0.5B",
+    "lora_rank": 16
+  },
+  "benchmark": "multi-source-v1",
+  "benchmark_version": 1,
+  "test_sha256": "c7b7fcc898a82660828e20b4a8ef7bf0acd18104eb40eb47722238d623c93660",
+  "metrics": {
+    "accuracy": 0.45111111111111113,
+    "nll": 1.8027895421565299,
+    "brier": 0.8096906272395483,
+    "ece": 0.47785159157382123,
+    "mean_confidence": 0.7716841498845154,
+    "confidence_at_0_9_coverage": 0.41333333333333333,
+    "confidence_at_0_9_accuracy": 0.5618279569892473,
+    "median_latency_ms": 237.73325001820922
+  },
+  "by_source": {
+    "agnews": {"records": 150, "accuracy": 0.48, "nll": 1.6588698148057601},
+    "banking77": {"records": 150, "accuracy": 0.8333333333333334, "nll": 0.6611600194067845},
+    "boolq": {"records": 150, "accuracy": 0.38, "nll": 1.3272122172706475},
+    "mnli": {"records": 150, "accuracy": 0.2866666666666667, "nll": 3.8275717019990907},
+    "sst5": {"records": 150, "accuracy": 0.32666666666666666, "nll": 1.681019032708993},
+    "yelp": {"records": 150, "accuracy": 0.4, "nll": 1.6609044667479014}
+  }
+}
