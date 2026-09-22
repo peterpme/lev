@@ -1,0 +1,27 @@
+{
+  "experiment": "banking77-1500-lr1e-4",
+  "base": "Qwen/Qwen2.5-0.5B",
+  "sources": ["banking77"],
+  "training_examples": 1500,
+  "epochs": 2,
+  "learning_rate": 0.0001,
+  "lora_rank": 16,
+  "gradient_accumulation": 8,
+  "banking77_v1": {
+    "accuracy": 0.8266666666666667,
+    "nll": 0.5707541276369891,
+    "ece": 0.060036325653394014
+  },
+  "multi_source_v1": {
+    "accuracy": 0.5066666666666667,
+    "nll": 1.2868331234393002,
+    "ece": 0.3122698031200303
+  },
+  "comparison": {
+    "banking77_baseline_accuracy": 0.88,
+    "banking77_delta": -0.053333333333333344,
+    "mixed_baseline_accuracy": 0.45111111111111113,
+    "mixed_delta": 0.05555555555555558
+  },
+  "interpretation": "The lower learning rate improves mixed-task transfer modestly but causes a material Banking77 regression, so it is not the current default."
+}

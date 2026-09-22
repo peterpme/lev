@@ -548,3 +548,9 @@ Added `scripts/make_benchmark.py` and `scripts/expanded-background.sh`. The
 expanded worker waits for the queued six-source experiment, freezes a separate
 13-source held-out suite, trains 750 examples per source for two epochs, and
 benchmarks Banking77, the original six-source suite, and the expanded suite.
+
+The controlled Banking77-only learning-rate trial (`1e-4` instead of `2e-4`)
+finished before that queue advanced. It scored 82.7% on Banking77-v1 and
+50.7% on multi-source-v1. This is +5.6 points of mixed transfer but -5.3
+points on Banking77, so it is recorded as a non-winning candidate in
+`benchmarks/banking77-v1/experiments/banking77-1500-lr1e-4.json`.
