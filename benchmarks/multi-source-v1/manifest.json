@@ -1,0 +1,11 @@
+{
+  "name": "multi-source-v1",
+  "version": 1,
+  "source": "Hugging Face test/validation splits for Kev's six public datasets",
+  "seed": 7,
+  "records": 900,
+  "questions_per_record": 1,
+  "options": "mixed",
+  "test_file": "test.jsonl",
+  "test_sha256": "c7b7fcc898a82660828e20b4a8ef7bf0acd18104ab40eb47722238d623c93660"
+}
