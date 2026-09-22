@@ -1,0 +1,44 @@
+{
+  "model": "lev-banking77-1500-epochs3",
+  "training": {
+    "sources": ["banking77"],
+    "n_per_source": 1500,
+    "epochs": 3,
+    "gradient_accumulation": 8,
+    "base": "Qwen/Qwen2.5-0.5B",
+    "lora_rank": 16
+  },
+  "benchmarks": [
+    {
+      "benchmark": "banking77-v1",
+      "benchmark_version": 1,
+      "test_sha256": "5c7a81279040508a39632df4ccffb396ad987b1d1a15cc1cf0451d7cc90abeb0",
+      "metrics": {
+        "accuracy": 0.8733333333333333,
+        "nll": 0.523923454973501,
+        "brier": 0.1865194864499108,
+        "ece": 0.10092517733573918,
+        "mean_confidence": 0.9392935152848562,
+        "high_confidence_coverage": 0.8266666666666667,
+        "high_confidence_accuracy": 0.9516129032258065,
+        "median_latency_ms": 151.097375433892
+      }
+    },
+    {
+      "benchmark": "multi-source-v1",
+      "benchmark_version": 1,
+      "test_sha256": "c7b7fcc898a82660828e20b4a8ef7bf0acd18104eb40eb47722238d623c93660",
+      "metrics": {
+        "accuracy": 0.47444444444444445,
+        "nll": 1.9471722241870086,
+        "brier": 0.8127513960553546,
+        "ece": 0.5100747183958689,
+        "mean_confidence": 0.8266906966765721,
+        "high_confidence_coverage": 0.4811111111111111,
+        "high_confidence_accuracy": 0.5681293302540416,
+        "median_latency_ms": 39.38912460580468
+      }
+    }
+  ],
+  "interpretation": "Training the Banking77-only model for a third epoch does not solve cross-task generalization: Banking77 accuracy is 87.3% versus the 88.0% two-epoch baseline, and mixed accuracy is only 47.4% versus 45.1%. The six-source recipe remains substantially better on the mixed suite at 74.7%."
+}

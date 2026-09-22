@@ -520,3 +520,11 @@ cross-task accuracy by 29.6 percentage points (45.1% → 74.7%), while retaining
 83.3% accuracy on the Banking77 slice inside the mixed suite. The source
 breakdown shows MNLI, SST-5, and Yelp are the weakest transfer tasks, so future
 hill climbs should target those rather than adding arbitrary datasets.
+
+The controlled three-epoch Banking77-only run then scored 87.3% on
+`banking77-v1` and 47.4% on `multi-source-v1`. Compared with the two-epoch
+Banking77-only baseline, that is a slight target regression and only a 2.3-point
+mixed-suite improvement. More target-only optimization is therefore not the
+main lever; the six-source data mixture is responsible for the large
+generalization gain. The full result is in
+`benchmarks/banking77-v1/experiments/banking77-1500-epochs3.json`.
