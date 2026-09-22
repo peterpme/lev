@@ -80,10 +80,13 @@ def test_finance_phrasebank_is_a_supported_choice_source():
 
 
 def test_generated_composition_has_verified_relevant_and_irrelevant_pairs():
-    records = build(4, sources=["compositional"])
-    assert len(records) == 4
-    assert {record["_meta"]["pair_kind"] for record in records} == {"relevant", "irrelevant"}
-    for record in records:
-        question = record["questions"]["decision"]
-        assert question["label"] in {"accept", "reject"}
-        assert record["_meta"]["group_id"].startswith("compositional/")
+    for source in ("legacy_policy", "compositional"):
+        records = build(4, sources=[source])
+        assert len(records) == 4
+        groups = {record["_meta"]["group_id"] for record in records}
+        assert len(groups) == 1
+        assert {record["_meta"]["pair_kind"] for record in records} == {"relevant", "irrelevant"}
+        relevant = [record for record in records if record["_meta"]["pair_kind"] == "relevant"]
+        irrelevant = [record for record in records if record["_meta"]["pair_kind"] == "irrelevant"]
+        assert relevant[0]["questions"]["decision"]["label"] != relevant[1]["questions"]["decision"]["label"]
+        assert irrelevant[0]["questions"]["decision"]["label"] == irrelevant[1]["questions"]["decision"]["label"]

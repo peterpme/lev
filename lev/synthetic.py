@@ -168,19 +168,30 @@ def _leaf_indices(tree: Any) -> set[int]:
 
 
 def _policy_group(rng: random.Random, group_id: str) -> list[dict[str, Any]]:
-    amount = rng.choice([50, 100, 150, 250])
-    verified = bool(rng.randrange(2))
-    priority = bool(rng.randrange(2))
-    facts = {"amount": amount, "verified": verified, "priority": priority}
     policy = "Approve when the customer is verified AND the amount is at most 150, unless the case is priority."
 
     def label(values: dict[str, Any]) -> bool:
         return (values["verified"] and values["amount"] <= 150) or values["priority"]
 
-    base = label(facts)
-    edited = {**facts, "amount": 250 if amount <= 150 else 100}
-    if label(edited) == base:
-        edited = {**facts, "verified": not verified}
+    facts: dict[str, Any] | None = None
+    edited: dict[str, Any] | None = None
+    for _ in range(100):
+        candidate = {
+            "amount": rng.choice([50, 100, 150, 250]),
+            "verified": bool(rng.randrange(2)),
+            "priority": bool(rng.randrange(2)),
+        }
+        mutations = [
+            {**candidate, "amount": 250 if candidate["amount"] <= 150 else 100},
+            {**candidate, "verified": not candidate["verified"]},
+            {**candidate, "priority": not candidate["priority"]},
+        ]
+        changed = next((mutation for mutation in mutations if label(mutation) != label(candidate)), None)
+        if changed is not None:
+            facts, edited = candidate, changed
+            break
+    if facts is None or edited is None:
+        raise ValueError("could not create a decisive policy mutation")
     nuisance = {**facts, "routing_reference": rng.randint(100, 999)}
     records = []
     for pair_kind, pair_facts in (("relevant", (facts, edited)), ("irrelevant", (facts, nuisance))):
