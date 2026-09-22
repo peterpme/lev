@@ -119,6 +119,11 @@ but it is not a Backpack transaction-intent dataset. The most valuable future
 Backpack-specific data would be anonymized, labeled support messages or
 decision examples from the product domain, kept in a separate benchmark.
 
+Lev also has small deterministic generators for `legacy_policy` and
+`compositional`. These create labelled rule examples from executable Python
+rules, including relevant and irrelevant minimal pairs. They are educational
+approximations of Kev's generated policy data; they are not evaluation data.
+
 ### 2. Start the API
 
 ```bash

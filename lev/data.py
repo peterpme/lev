@@ -11,6 +11,7 @@ from typing import Any
 from datasets import load_dataset
 
 from .api import SystemOneRequest, render as render_value, to_record
+from .synthetic import build_synthetic
 
 DATASETS = {
     "banking77": "legacy-datasets/banking77",
@@ -28,6 +29,12 @@ DATASETS = {
     "openbookqa": "allenai/openbookqa:main",
     "csqa": "tau/commonsense_qa",
 }
+
+# CogComp/trec's default Hub branch is an old Python loading script.  The
+# datasets library no longer executes repository scripts, so use Hugging
+# Face's data-only Parquet conversion branch instead.  This is still the same
+# Hugging Face dataset, not a local CSV workaround.
+PARQUET_BRANCH = {"CogComp/trec": "refs/convert/parquet"}
 
 QUESTION_TEXT = "Which banking intent best describes this customer message?"
 NONE = "None of the above"
@@ -82,7 +89,12 @@ AMAZON = [
 
 def _dataset(repo: str, split: str):
     name, _, config = repo.partition(":")
-    return load_dataset(name, config or None, split=split)
+    return load_dataset(
+        name,
+        config or None,
+        split=split,
+        revision=PARQUET_BRANCH.get(name),
+    )
 
 
 def _sample(dataset: Any, count: int, rng: random.Random) -> list[dict[str, Any]]:
@@ -464,6 +476,8 @@ BUILDERS = {
     "arc": _arc,
     "openbookqa": _openbookqa,
     "csqa": _csqa,
+    "legacy_policy": lambda _split, count, rng: build_synthetic("legacy_policy", count, rng),
+    "compositional": lambda _split, count, rng: build_synthetic("compositional", count, rng),
 }
 SPLITS = {
     "banking77": ("train", "test"),
@@ -480,6 +494,8 @@ SPLITS = {
     "arc": ("train", "test"),
     "openbookqa": ("train", "test"),
     "csqa": ("train", "validation"),
+    "legacy_policy": ("generated", "generated"),
+    "compositional": ("generated", "generated"),
 }
 
 
@@ -566,6 +582,8 @@ def materialize(request: dict[str, Any]) -> dict[str, Any]:
             question["label"] = int(label)
         question["src"] = source_question["src"]
         question["qtype"] = meta["type"]
+    if "_meta" in request:
+        record["_meta"] = request["_meta"]
     return record
 
 

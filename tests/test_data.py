@@ -1,6 +1,6 @@
 import random
 
-from lev.data import DATASETS, BUILDERS, _mcq, augment, materialize, render_value
+from lev.data import DATASETS, BUILDERS, _mcq, augment, build, materialize, render_value
 
 
 def test_expanded_source_loaders_are_registered():
@@ -77,3 +77,13 @@ def test_render_value_keeps_structure_labels():
 def test_finance_phrasebank_is_a_supported_choice_source():
     assert DATASETS["financial_phrasebank"] == "atrost/financial_phrasebank"
     assert "financial_phrasebank" in BUILDERS
+
+
+def test_generated_composition_has_verified_relevant_and_irrelevant_pairs():
+    records = build(4, sources=["compositional"])
+    assert len(records) == 4
+    assert {record["_meta"]["pair_kind"] for record in records} == {"relevant", "irrelevant"}
+    for record in records:
+        question = record["questions"]["decision"]
+        assert question["label"] in {"accept", "reject"}
+        assert record["_meta"]["group_id"].startswith("compositional/")
