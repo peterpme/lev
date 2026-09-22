@@ -1,4 +1,4 @@
-"""Train the first Banking77-only Lev model."""
+"""Train Lev on one or more of Kev's public source datasets."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from pathlib import Path
 import torch
 import torch.nn.functional as F
 
-from .data import augment, build_banking77, materialize
+from .data import augment, build, materialize
 from .model import DecisionModel, encode, load_tokenizer
 
 
@@ -56,6 +56,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base", default="Qwen/Qwen2.5-0.5B")
     parser.add_argument("--n_per_source", type=int, default=40)
+    parser.add_argument("--sources", default="banking77")
     parser.add_argument("--epochs", type=int, default=1)
     parser.add_argument("--lr", type=float, default=2e-4)
     parser.add_argument("--lora", type=int, default=16)
@@ -75,8 +76,9 @@ def main() -> None:
     trainable = sum(parameter.numel() for parameter in model.trainable_parameters())
     print(f"device={device} trainable_params={trainable / 1e6:.2f}M", flush=True)
 
-    requests = build_banking77(args.n_per_source, "train", args.seed)
-    print(f"training_requests={len(requests)} source=banking77", flush=True)
+    sources = args.sources.split(",")
+    requests = build(args.n_per_source, "train", args.seed, sources)
+    print(f"training_requests={len(requests)} sources={','.join(sources)}", flush=True)
 
     if args.dry_run:
         record = materialize(requests[0])

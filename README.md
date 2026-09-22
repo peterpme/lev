@@ -70,6 +70,17 @@ uv run python -m lev.train \
 The folder name is only a label: it identifies which training run the server
 should load.
 
+To mirror Kev's six-source recipe, pass the source list explicitly:
+
+```bash
+LEV_SOURCES=banking77,boolq,agnews,mnli,sst5,yelp \
+  ./scripts/train-background.sh runs/multi-six-40
+```
+
+This trains 40 records from each source for one epoch by default. The loaders
+and internal question types are implemented; the public API currently exposes
+the same three types, with `choice` being the simplest path to try first.
+
 ### 2. Start the API
 
 ```bash
@@ -112,8 +123,9 @@ GET  /v1/models
 POST /v1/systemone
 ```
 
-Lev currently supports `choice` questions only. `noul` and `score` are future
-steps.
+Lev supports `choice`, `noul`, and `score` question shapes. The six-source
+training path uses all three; `choice` is the easiest API path to understand
+first.
 
 ## How does this work?
 

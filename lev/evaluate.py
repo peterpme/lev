@@ -19,7 +19,10 @@ from .train import choose_device
 def load_checkpoint(run: Path, device: str) -> tuple[object, DecisionModel]:
     """Recombine cached Qwen weights, the LoRA adapter, and pointer head."""
     meta = torch.load(run / "head.pt", map_location="cpu", weights_only=False)
-    tokenizer = load_tokenizer(meta["base"])
+    # Training saves the tokenizer with the adapter. Prefer that local copy so
+    # evaluation and serving do not need to resolve it from Hugging Face again.
+    tokenizer_source = run if (run / "tokenizer.json").exists() else meta["base"]
+    tokenizer = load_tokenizer(str(tokenizer_source))
     model = DecisionModel(meta["base"], device, lora_rank=None)
     model.backbone = PeftModel.from_pretrained(model.backbone, run).to(device)
     model.head.load_state_dict(meta["head"])

@@ -1,0 +1,27 @@
+{
+  "model": "lev-multi-six-40",
+  "training": {
+    "sources": ["banking77", "boolq", "agnews", "mnli", "sst5", "yelp"],
+    "n_per_source": 40,
+    "epochs": 2,
+    "gradient_accumulation": 8,
+    "base": "Qwen/Qwen2.5-0.5B",
+    "lora_rank": 16
+  },
+  "benchmark": "banking77-v1",
+  "benchmark_version": 1,
+  "test_sha256": "5c7a81279040508a39632df4ccffb396ad987b1d1a15cc1cf0451d7cc90abeb0",
+  "metrics": {
+    "accuracy": 0.04666666666666667,
+    "nll": 4.326866277989503,
+    "brier": 0.9869908472746735,
+    "ece": 0.06611407543222109,
+    "mean_confidence": 0.0716066121806701,
+    "confidence_threshold": 0.9,
+    "high_confidence_coverage": 0.0,
+    "high_confidence_accuracy": null,
+    "max_probability_sum_error": 1.4388933777809143e-07,
+    "median_latency_ms": 138.22370814159513
+  },
+  "interpretation": "This intentionally small mixed-data run is not competitive with the 1,500-example Banking77 baseline. It records that source mixing must be evaluated with adequate per-source scale and task-balanced training."
+}

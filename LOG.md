@@ -355,10 +355,13 @@ The next useful steps are intentionally sequential:
 - `lev/model.py`: tokenizer packing, block-causal mask, Qwen backbone, LoRA, and pointer head.
 - `lev/train.py`: loss, optimizer, scheduler, MPS training, and checkpoint saving.
 - `lev/api.py`: Pydantic request/response models and JSON/tensor conversion.
-- `lev/serve.py`: choice-only FastAPI server.
+- `lev/serve.py`: FastAPI server for the TypeSafe-shaped question types.
 - `lev/render.py`: inspect a transformed row before tokenization.
 - `scripts/train-background.sh`: detached training launcher.
 - `tests/`: small tests for each core mechanism.
+
+The serving and training paths now also support Kev's `noul` and `score`
+question types internally; official SDK compatibility remains separate work.
 
 ## External references
 

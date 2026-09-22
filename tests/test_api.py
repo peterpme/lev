@@ -119,3 +119,33 @@ def test_systemone_rejects_nested_input_shape() -> None:
         assert ("body", "questions") in locations
     finally:
         close_client(test_client)
+
+
+def test_systemone_supports_noul_and_score_questions() -> None:
+    test_client = client()
+    try:
+        response = test_client.post(
+            "/v1/systemone",
+            json={
+                "state": "The customer says the experience was excellent.",
+                "questions": {
+                    "recommend": {
+                        "type": "noul",
+                        "instructions": "Would the customer recommend this?",
+                    },
+                    "rating": {
+                        "type": "score",
+                        "instructions": "How positive is the review?",
+                        "criteria": ["negative", "neutral", "positive"],
+                    },
+                },
+            },
+        )
+
+        assert response.status_code == 200, response.text
+        answers = response.json()["answers"]
+        assert answers["recommend"]["type"] == "noul"
+        assert answers["rating"]["type"] == "score"
+        assert set(answers["rating"]["probabilities"]) == {"0", "1", "2"}
+    finally:
+        close_client(test_client)

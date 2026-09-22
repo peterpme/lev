@@ -10,14 +10,12 @@ Given one customer message and a list of possible choices, return one probabilit
 
 Do not build yet:
 
-- full TypeSafe API compatibility (`noul` and `score` remain later)
-- six datasets
+- official TypeSafe SDK compatibility
 - production serving
 - calibration systems
 - Modal/GPU jobs
 - policy-pair suites
 - elaborate evaluation infrastructure
-- `noul` and `score` question types
 
 ## Steps
 
@@ -35,8 +33,10 @@ Do not build yet:
 12. Evaluate accuracy and inspect predicted probabilities. ✅ (88.67% on 150 held-out rows)
 13. Add multiple questions and Kev's question-isolation mask. ✅ (mask implemented and tested)
 14. Add a TypeSafe-compatible `choice` input/output layer. ✅
-15. Add `noul`, `score`, serving, and more datasets later.
-16. Freeze and report a reproducible Banking77 benchmark. ✅ `benchmarks/banking77-v1`.
+15. Add `noul`, `score`, and shared serving support. ✅
+16. Add Kev's six public dataset loaders. ✅
+17. Compare Banking77-only and six-source checkpoints on the frozen benchmark.
+18. Freeze and report a reproducible Banking77 benchmark. ✅ `benchmarks/banking77-v1`.
 
 ## Definition of done
 
@@ -45,7 +45,7 @@ Lev is successful when it can load Banking77 through Hugging Face, train on a ti
 That first definition of done is now satisfied. The active next milestone is useful
 held-out Banking77 accuracy from the 1,500-example run.
 
-The first `choice` API milestone is also complete. `lev.serve` accepts
-`POST /v1/systemone`, validates requests with Pydantic, runs the saved checkpoint,
-and returns named probabilities. `noul`, `score`, and full SDK compatibility
-remain future work.
+The first TypeSafe-shaped API milestone is complete. `lev.serve` accepts
+`POST /v1/systemone`, validates `choice`, `noul`, and `score` requests with
+Pydantic, runs the saved checkpoint, and returns typed probabilities. Official
+SDK compatibility remains future work.

@@ -1,4 +1,4 @@
-"""Banking77 conversion used by Lev's first Kev-like training run."""
+"""Load Kev's first six public datasets and render them for Lev."""
 
 from __future__ import annotations
 
@@ -10,9 +10,17 @@ from typing import Any
 
 from datasets import load_dataset
 
-from .api import render as render_value
+from .api import SystemOneRequest, render as render_value, to_record
 
-DATASET_NAME = "legacy-datasets/banking77"
+DATASETS = {
+    "banking77": "legacy-datasets/banking77",
+    "boolq": "google/boolq",
+    "agnews": "fancyzhx/ag_news",
+    "mnli": "nyu-mll/multi_nli",
+    "sst5": "SetFit/sst5",
+    "yelp": "Yelp/yelp_review_full",
+}
+
 QUESTION_TEXT = "Which banking intent best describes this customer message?"
 NONE = "None of the above"
 DISTRACTORS = {
@@ -27,6 +35,34 @@ BANK_TEMPLATES = [
     "Request related to {}",
     "{}",
 ]
+AG = {
+    "world": "World news: politics, international affairs, conflicts",
+    "sports": "Sports: games, athletes, teams, results",
+    "business": "Business: companies, markets, economy, finance",
+    "scitech": "Science and technology: research, gadgets, software, space",
+}
+MNLI = {
+    "entailment": "The hypothesis follows from the premise",
+    "neutral": "The hypothesis may or may not be true given the premise",
+    "contradiction": "The hypothesis contradicts the premise",
+}
+SST5 = ["very negative", "negative", "neutral", "positive", "very positive"]
+YELP = [
+    "1 star: terrible experience",
+    "2 stars: poor",
+    "3 stars: average",
+    "4 stars: good",
+    "5 stars: excellent",
+]
+
+
+def _dataset(repo: str, split: str):
+    name, _, config = repo.partition(":")
+    return load_dataset(name, config or None, split=split)
+
+
+def _sample(dataset: Any, count: int, rng: random.Random) -> list[dict[str, Any]]:
+    return [dataset[index] for index in rng.sample(range(len(dataset)), min(count, len(dataset)))]
 
 
 def _wrap_state(text: str, rng: random.Random) -> Any:
@@ -60,31 +96,21 @@ def _instructions(text: str, rng: random.Random) -> Any:
     return text
 
 
-def _description(text: str, rng: random.Random) -> str | None:
-    return None if rng.random() < 0.5 else text
+def _description(text: str, rng: random.Random, null_rate: float = 0.3) -> str | None:
+    return None if rng.random() < null_rate else text
 
 
-def build_banking77(
-    n_per_source: int,
-    split: str = "train",
-    seed: int = 0,
-) -> list[dict[str, Any]]:
-    """Load Banking77 from Hugging Face and make Kev-shaped labelled requests."""
-    rng = random.Random(seed)
-    hub_split = "train" if split == "train" else "test"
-    dataset = load_dataset(DATASET_NAME, split=hub_split)
+def _banking(split: str, count: int, rng: random.Random) -> list[dict[str, Any]]:
+    dataset = _dataset(DATASETS["banking77"], split)
     names = list(dataset.features["label"].names)
-    indices = rng.sample(range(len(dataset)), min(n_per_source, len(dataset)))
-
-    requests: list[dict[str, Any]] = []
-    for index in indices:
-        example = dataset[index]
+    output = []
+    for example in _sample(dataset, count, rng):
         template = rng.choice(BANK_TEMPLATES)
         criteria = {
-            name: _description(template.format(name.replace("_", " ")), rng)
+            name: _description(template.format(name.replace("_", " ")), rng, 0.5)
             for name in names
         }
-        requests.append(
+        output.append(
             {
                 "state": _wrap_state(example["text"], rng),
                 "questions": {
@@ -98,8 +124,164 @@ def build_banking77(
                 },
             }
         )
-    rng.shuffle(requests)
+    return output
+
+
+def _boolq(split: str, count: int, rng: random.Random) -> list[dict[str, Any]]:
+    output = []
+    for example in _sample(_dataset(DATASETS["boolq"], split), count, rng):
+        question = {
+            "type": "noul",
+            "instructions": _instructions(example["question"].strip().rstrip("?") + "?", rng),
+            "criteria": {
+                "true": "The passage supports a yes answer",
+                "false": "The passage supports a no answer or does not say",
+            },
+            "label": bool(example["answer"]),
+            "src": "boolq",
+        }
+        output.append({"state": _wrap_state(example["passage"], rng), "questions": {"answer": question}})
+    return output
+
+
+def _agnews(split: str, count: int, rng: random.Random) -> list[dict[str, Any]]:
+    keys = list(AG)
+    output = []
+    for example in _sample(_dataset(DATASETS["agnews"], split), count, rng):
+        label = keys[example["label"]]
+        questions: dict[str, dict[str, Any]] = {
+            "topic": {
+                "type": "choice",
+                "instructions": _instructions("What is the topic of this article?", rng),
+                "criteria": {key: _description(value, rng) for key, value in AG.items()},
+                "label": label,
+                "src": "agnews",
+            }
+        }
+        for key in rng.sample(keys, 2):
+            questions[f"is_{key}"] = {
+                "type": "noul",
+                "instructions": f"Is this article about {key}?",
+                "criteria": {"true": "Yes", "false": "No"},
+                "label": key == label,
+                "src": "agnews_yn",
+            }
+        output.append({"state": _wrap_state(example["text"], rng), "questions": questions})
+    return output
+
+
+def _mnli(split: str, count: int, rng: random.Random) -> list[dict[str, Any]]:
+    keys = list(MNLI)
+    output = []
+    for example in _sample(_dataset(DATASETS["mnli"], split), count, rng):
+        if example["label"] < 0:
+            continue
+        output.append(
+            {
+                "state": _wrap_state(example["premise"], rng),
+                "questions": {
+                    "relation": {
+                        "type": "choice",
+                        "instructions": _instructions(
+                            f'Hypothesis: "{example["hypothesis"]}" How does it relate to the premise?', rng
+                        ),
+                        "criteria": {key: _description(value, rng) for key, value in MNLI.items()},
+                        "label": keys[example["label"]],
+                        "src": "mnli",
+                    }
+                },
+            }
+        )
+    return output
+
+
+def _sst5(split: str, count: int, rng: random.Random) -> list[dict[str, Any]]:
+    return [
+        {
+            "state": _wrap_state(example["text"], rng),
+            "questions": {
+                "sentiment": {
+                    "type": "score",
+                    "instructions": _instructions("What is the sentiment of this sentence?", rng),
+                    "criteria": list(SST5),
+                    "label": example["label"],
+                    "src": "sst5",
+                }
+            },
+        }
+        for example in _sample(_dataset(DATASETS["sst5"], split), count, rng)
+    ]
+
+
+def _yelp(split: str, count: int, rng: random.Random) -> list[dict[str, Any]]:
+    output = []
+    for example in _sample(_dataset(DATASETS["yelp"], split), count, rng):
+        text = " ".join(example["text"].split()[:220])
+        output.append(
+            {
+                "state": _wrap_state(text, rng),
+                "questions": {
+                    "rating": {
+                        "type": "score",
+                        "instructions": _instructions("How many stars did this reviewer give?", rng),
+                        "criteria": list(YELP),
+                        "label": example["label"],
+                        "src": "yelp",
+                    },
+                    "recommend": {
+                        "type": "noul",
+                        "instructions": "Would this reviewer recommend the business?",
+                        "criteria": {"true": "Clearly positive overall", "false": "Negative or mixed"},
+                        "label": example["label"] >= 3,
+                        "src": "yelp_yn",
+                    },
+                },
+            }
+        )
+    return output
+
+
+BUILDERS = {
+    "banking77": _banking,
+    "boolq": _boolq,
+    "agnews": _agnews,
+    "mnli": _mnli,
+    "sst5": _sst5,
+    "yelp": _yelp,
+}
+SPLITS = {
+    "banking77": ("train", "test"),
+    "boolq": ("train", "validation"),
+    "agnews": ("train", "test"),
+    "mnli": ("train", "validation_matched"),
+    "sst5": ("train", "test"),
+    "yelp": ("train", "test"),
+}
+
+
+def build(
+    n_per_source: int,
+    split: str = "train",
+    seed: int = 0,
+    sources: list[str] | None = None,
+) -> list[dict[str, Any]]:
+    selected = list(BUILDERS) if sources is None else sources
+    unknown = set(selected) - set(BUILDERS)
+    if unknown:
+        raise ValueError(f"unknown sources: {sorted(unknown)}")
+    requests: list[dict[str, Any]] = []
+    for offset, source in enumerate(selected):
+        source_seed = seed + offset * 1009
+        rng = random.Random(source_seed)
+        hub_split = SPLITS[source][0 if split == "train" else 1]
+        requests.extend(BUILDERS[source](hub_split, n_per_source, rng))
+    random.Random(seed).shuffle(requests)
     return requests
+
+
+def build_banking77(n_per_source: int, split: str = "train", seed: int = 0) -> list[dict[str, Any]]:
+    """Backwards-compatible Banking77-only loader used by the first benchmark."""
+    return build(n_per_source, split, seed, ["banking77"])
 
 
 def augment(
@@ -108,9 +290,12 @@ def augment(
     p_none: float = 0.10,
     p_distract: float = 0.15,
 ) -> dict[str, Any]:
-    """Shuffle choices and apply Kev's none/distractor augmentation."""
+    """Shuffle Choice options and optionally add simple irrelevant alternatives."""
     output = {"state": request["state"], "questions": {}}
     for question_id, question in request["questions"].items():
+        if question["type"] != "choice":
+            output["questions"][question_id] = question
+            continue
         criteria = dict(question["criteria"])
         label = question["label"]
         if len(criteria) > 2 and rng.random() < p_none:
@@ -118,9 +303,8 @@ def augment(
             criteria["other"] = NONE
             label = "other"
         elif rng.random() < p_distract:
-            key = rng.choice(list(DISTRACTORS))
+            key = rng.choice([key for key in DISTRACTORS if key not in criteria])
             criteria[key] = DISTRACTORS[key]
-
         keys = list(criteria)
         rng.shuffle(keys)
         output["questions"][question_id] = {
@@ -132,45 +316,49 @@ def augment(
 
 
 def materialize(request: dict[str, Any]) -> dict[str, Any]:
-    """Convert the labelled request into the compact record consumed by the model."""
-    questions: list[dict[str, Any]] = []
-    for question in request["questions"].values():
-        keys = list(question["criteria"])
-        options = []
-        for key, description in question["criteria"].items():
-            rendered = render_value(description)
-            options.append(key if not rendered else f"{key}: {rendered}")
-        questions.append(
-            {
-                "instr": render_value(question["instructions"]),
-                "options": options,
-                "label": keys.index(question["label"]),
-                "src": question["src"],
-                "qtype": "choice",
+    """Convert a labelled request through the same public renderer as serving."""
+    public = {
+        "state": request["state"],
+        "questions": {
+            question_id: {
+                key: value
+                for key, value in question.items()
+                if key not in ("label", "src")
             }
-        )
-    return {"state": render_value(request["state"]), "questions": questions}
+            for question_id, question in request["questions"].items()
+        },
+    }
+    record, metadata = to_record(SystemOneRequest.model_validate(public))
+    for question, meta, (question_id, source_question) in zip(
+        record["questions"], metadata, request["questions"].items()
+    ):
+        del question_id
+        label = source_question["label"]
+        if meta["type"] == "noul":
+            question["label"] = int(bool(label))
+        elif meta["type"] == "choice":
+            question["label"] = meta["keys"].index(label)
+        else:
+            question["label"] = int(label)
+        question["src"] = source_question["src"]
+        question["qtype"] = meta["type"]
+    return record
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--n_per_source", type=int, default=40)
+    parser.add_argument("--sources", default="banking77")
     parser.add_argument("--split", choices=["train", "test"], default="train")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
-
-    requests = build_banking77(args.n_per_source, args.split, args.seed)
+    requests = build(args.n_per_source, args.split, args.seed, args.sources.split(","))
     records = [materialize(request) for request in requests]
-    print(
-        f"loaded {len(records)} records from {DATASET_NAME} "
-        f"({args.split}); options={len(records[0]['questions'][0]['options'])}"
-    )
+    print(f"loaded {len(records)} records from {args.sources}; questions={sum(len(record['questions']) for record in records)}")
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(
-            "".join(json.dumps(record, ensure_ascii=False) + "\n" for record in records)
-        )
+        args.out.write_text("".join(json.dumps(record, ensure_ascii=False) + "\n" for record in records))
         print(f"wrote {args.out}")
     else:
         print(json.dumps(records[0], indent=2, ensure_ascii=False))
