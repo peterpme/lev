@@ -1,0 +1,48 @@
+{
+  "model": "lev-multi-six-1500",
+  "training": {
+    "sources": ["banking77", "boolq", "agnews", "mnli", "sst5", "yelp"],
+    "n_per_source": 1500,
+    "epochs": 2,
+    "gradient_accumulation": 8,
+    "base": "Qwen/Qwen2.5-0.5B",
+    "lora_rank": 16
+  },
+  "benchmarks": [
+    {
+      "benchmark": "banking77-v1",
+      "benchmark_version": 1,
+      "test_sha256": "5c7a81279040508a39632df4ccffb396ad987b1d1a15cc1cf0451d7cc90abeb0",
+      "metrics": {
+        "accuracy": 0.8666666666666667,
+        "nll": 0.47513950838266744,
+        "brier": 0.18912329912791367,
+        "ece": 0.09844431281089777,
+        "mean_confidence": 0.9129828754067421,
+        "confidence_threshold": 0.9,
+        "high_confidence_coverage": 0.7666666666666667,
+        "high_confidence_accuracy": 0.9739130434782609,
+        "max_probability_sum_error": 2.2761511297986203e-07,
+        "median_latency_ms": 128.04991705343127
+      }
+    },
+    {
+      "benchmark": "multi-source-v1",
+      "benchmark_version": 1,
+      "test_sha256": "c7b7fcc898a82660828e20b4a8ef7bf0acd18104eb40eb47722238d623c93660",
+      "metrics": {
+        "accuracy": 0.7466666666666667,
+        "nll": 0.7187446622867634,
+        "brier": 0.35950389844392894,
+        "ece": 0.14940558877256177,
+        "mean_confidence": 0.8342791581816144,
+        "confidence_threshold": 0.9,
+        "high_confidence_coverage": 0.5111111111111111,
+        "high_confidence_accuracy": 0.9239130434782609,
+        "max_probability_sum_error": 3.19732253117877e-07,
+        "median_latency_ms": 47.29695804417133
+      }
+    }
+  ],
+  "interpretation": "The larger six-source run is strong on the mixed benchmark but transfers slightly negatively to the locked Banking77-only benchmark: 86.7% versus the 88.0% Banking77-only baseline. More data is not automatically better when the task mixture, label spaces, and training budget change."
+}

@@ -499,3 +499,17 @@ optional `financial_phrasebank` source and documented a small smoke command.
 The six-source Kev comparison remains the primary experiment; this finance
 source will be evaluated separately so it cannot silently distort the locked
 Banking77 result.
+
+## 2026-09-21 — six-source result
+
+The completed Kev-style run used 1,500 examples from each of six sources,
+Qwen2.5-0.5B, rank-16 LoRA, two epochs, and gradient accumulation of 8. It
+reached 2,250 optimizer updates and saved `runs/multi-six-1500`.
+
+On the immutable `banking77-v1` suite it scored 86.7% accuracy, compared with
+the 88.0% Banking77-only baseline. NLL improved from 0.518 to 0.475, but
+calibration ECE worsened from 0.041 to 0.098. On the 900-record
+`multi-source-v1` suite it scored 74.7% accuracy. This is a useful controlled
+result: adding heterogeneous datasets can improve mixed-task coverage without
+improving the original target task. The result is recorded in
+`benchmarks/banking77-v1/experiments/multi-six-1500.json`.
