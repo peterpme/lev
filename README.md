@@ -211,6 +211,7 @@ against this same suite. The checked-in baseline is
 
 - [Learning Q&A](LEARNING_QA.md) — questions and answers from the build, in plain language.
 - [Benchmarking guide](BENCHMARKING.md) — how to save results and iterate without overfitting the test set.
+- [Model card](MODEL_CARD.md) — training recipe, results, limitations, and reproduction steps.
 - [Goal and milestones](GOAL.md) — what Lev includes and what remains.
 - [Kev's original prototype commit](https://github.com/jaredpalmer/kev/commit/d0e2b1fc4f9e410137b6b4ab7f7153fc52868a16).
 - [Banking77 on Hugging Face](https://huggingface.co/datasets/legacy-datasets/banking77).

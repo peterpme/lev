@@ -1,5 +1,29 @@
 # Benchmarking Lev
 
+## In plain English
+
+A benchmark is a fixed exam. The model receives examples it did not train on,
+chooses an option, and gets one point when its top option matches the stored
+label. Because the exam file is fixed and checksummed, two model versions can
+be compared fairly.
+
+Hill-climbing means changing one training choice, retraining, and keeping the
+change only when it improves the metric we care about without breaking the
+regression suite. Typical changes are learning rate, number of examples, epochs,
+LoRA rank, augmentation, or the base model.
+
+The crucial distinction is:
+
+```text
+training data → model learns
+development data → choose among experiments
+locked test data → final, infrequent claim
+```
+
+If we repeatedly choose models based on the locked test score, we gradually
+train on the test set indirectly. Lev therefore uses `banking77-v1` as a locked
+regression test and `multi-source-v1` as the broader generalization measurement.
+
 ## What is saved today?
 
 The first stable suite is [`benchmarks/banking77-v1`](benchmarks/banking77-v1):
@@ -92,3 +116,17 @@ Create a new benchmark version when the evaluation question changes:
 
 Never rewrite `banking77-v1`. Its purpose is to make progress and regressions
 visible over time.
+
+## What Kev adds
+
+Kev follows the same pattern at a larger research-preview scale. Its repository
+freezes dataset versions and file hashes, records development and locked-test
+partitions, reports per-source and calibration metrics, and runs bounded
+configuration-only trials. It also tests behaviors that ordinary accuracy
+misses: changing option order, hiding evidence in another question, adding
+irrelevant options, and presenting unknowable examples.
+
+Lev currently has the first two frozen suites and per-source metrics. The Kev
+repository is the roadmap for future additions such as paired bootstrap
+comparisons, question-isolation checks, permutation robustness, and a separate
+transfer suite.
