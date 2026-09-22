@@ -460,3 +460,31 @@ tmux instructions from the main path. The README now has:
 - a compact explanation of tokenization and the model pipeline;
 - the stable benchmark command;
 - links to `LEARNING_QA.md`, the goal, Kev, and Banking77.
+
+## 2026-09-21 — Kev's six-source path
+
+Added loaders for the six public datasets used by Kev's initial recipe:
+Banking77, BoolQ, AG News, MNLI, SST-5, and Yelp. Each Hugging Face example is
+converted through the same typed request renderer used by the API, then
+materialized into Lev's internal pointer-head records. This means the training
+path now exercises `choice`, `noul`, and `score` questions instead of inventing
+a second private format.
+
+The first intentionally tiny six-source run used 40 examples per source and
+performed poorly on Banking77 (4.7% accuracy). That is a useful result, not a
+regression of the original 88% baseline: it shows that mixing tasks at tiny
+scale does not provide enough Banking77 exposure. The result is recorded in
+`benchmarks/banking77-v1/experiments/multi-six-40.json`.
+
+Created `benchmarks/multi-source-v1`, a fixed 900-record held-out suite with
+150 examples from each of the six sources. `banking77-v1` remains the locked
+regression test; `multi-source-v1` measures whether the mixed recipe actually
+generalizes across tasks.
+
+Started the Kev-style comparison run `runs/multi-six-1500`: 1,500 examples per
+source, Qwen 0.5B, rank-16 LoRA, two epochs, and gradient accumulation of 8.
+The detached `scripts/hillclimb-background.sh` queue will benchmark it on both
+suites, then try controlled Banking77 variants (three epochs and a lower
+learning rate) one at a time. Checkpoints and reports stay under ignored
+`runs/`; committed benchmark suites and experiment summaries remain the durable
+record.
