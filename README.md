@@ -81,6 +81,18 @@ This trains 40 records from each source for one epoch by default. The loaders
 and internal question types are implemented; the public API currently exposes
 the same three types, with `choice` being the simplest path to try first.
 
+Kev's later recipe adds more optional sources. Lev also includes compatible
+loaders for `trec`, `dbpedia14`, `imdb`, `amazon`, `arc`, `openbookqa`, and
+`csqa`. Add them deliberately to an experiment rather than assuming more data
+is automatically better: these sources teach different tasks and can improve
+transfer while slightly diluting the Banking77 objective.
+
+```bash
+LEV_SOURCES=banking77,boolq,agnews,mnli,sst5,yelp,trec,dbpedia14,imdb,amazon,arc,openbookqa,csqa \
+  LEV_N_PER_SOURCE=750 LEV_EPOCHS=2 \
+  ./scripts/train-background.sh runs/kev-thirteen-750
+```
+
 For a finance-specific experiment, Financial PhraseBank is also available as
 an optional source:
 
@@ -91,6 +103,11 @@ LEV_SOURCES=banking77,financial_phrasebank \
 
 It contributes three-way financial sentiment examples (`negative`, `neutral`,
 and `positive`). It remains optional until the six-source benchmark is measured.
+
+Financial PhraseBank is useful for testing financial language and sentiment,
+but it is not a Backpack transaction-intent dataset. The most valuable future
+Backpack-specific data would be anonymized, labeled support messages or
+decision examples from the product domain, kept in a separate benchmark.
 
 ### 2. Start the API
 

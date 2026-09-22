@@ -528,3 +528,18 @@ mixed-suite improvement. More target-only optimization is therefore not the
 main lever; the six-source data mixture is responsible for the large
 generalization gain. The full result is in
 `benchmarks/banking77-v1/experiments/banking77-1500-epochs3.json`.
+
+## 2026-09-21 — expanded Kev loaders
+
+Compared Lev's loaders with Kev's current public `kev/data.py`. Added the next
+seven trainable sources from that recipe: TREC, DBpedia-14, IMDb, Amazon
+Reviews, ARC-Challenge, OpenBookQA, and CommonsenseQA. They use the same
+Hugging Face `load_dataset` path and the same typed request renderer as the
+existing sources. Added a neutral-key multiple-choice converter so the model
+cannot learn that option `A` is always correct.
+
+This is an implementation checkpoint, not yet a quality claim. The next
+experiment will train a controlled 13-source mixture and compare it against
+the frozen Banking77 and multi-source suites. More data may improve transfer,
+but it can also dilute Banking77 or introduce task conflicts, so the benchmark
+decides whether the change is useful.

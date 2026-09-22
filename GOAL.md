@@ -37,6 +37,8 @@ Do not build yet:
 16. Add Kev's six public dataset loaders. ✅
 17. Compare Banking77-only and six-source checkpoints on the frozen benchmark.
 18. Freeze and report a reproducible Banking77 benchmark. ✅ `benchmarks/banking77-v1`.
+19. Add the seven additional trainable source loaders from Kev's expanded recipe. ✅
+20. Measure whether the expanded mixture improves the mixed-source suite without regressing Banking77.
 
 ## Definition of done
 

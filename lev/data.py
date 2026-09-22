@@ -20,6 +20,13 @@ DATASETS = {
     "sst5": "SetFit/sst5",
     "yelp": "Yelp/yelp_review_full",
     "financial_phrasebank": "atrost/financial_phrasebank",
+    "trec": "CogComp/trec",
+    "dbpedia14": "fancyzhx/dbpedia_14",
+    "imdb": "stanfordnlp/imdb",
+    "amazon": "SetFit/amazon_reviews_multi_en",
+    "arc": "allenai/ai2_arc:ARC-Challenge",
+    "openbookqa": "allenai/openbookqa:main",
+    "csqa": "tau/commonsense_qa",
 }
 
 QUESTION_TEXT = "Which banking intent best describes this customer message?"
@@ -56,6 +63,21 @@ YELP = [
     "5 stars: excellent",
 ]
 FINANCE_SENTIMENT = ["negative", "neutral", "positive"]
+TREC = {
+    "abbreviation": "Asks what an abbreviation stands for",
+    "entity": "Asks about a thing, object, animal, product, or creative work",
+    "description": "Asks for a definition, description, reason, or manner",
+    "human": "Asks about a person, group, or organisation",
+    "location": "Asks about a place",
+    "number": "Asks for a number, date, count, or other numeric value",
+}
+AMAZON = [
+    "1 star: very negative",
+    "2 stars: negative",
+    "3 stars: mixed",
+    "4 stars: positive",
+    "5 stars: very positive",
+]
 
 
 def _dataset(repo: str, split: str):
@@ -270,6 +292,163 @@ def _financial_phrasebank(split: str, count: int, rng: random.Random) -> list[di
     return output
 
 
+def _trec(split: str, count: int, rng: random.Random) -> list[dict[str, Any]]:
+    dataset = _dataset(DATASETS["trec"], split)
+    keys = list(TREC)
+    return [
+        {
+            "state": _wrap_state(example["text"], rng),
+            "questions": {
+                "answer_type": {
+                    "type": "choice",
+                    "instructions": "What kind of answer does this question ask for?",
+                    "criteria": dict(TREC),
+                    "label": keys[example["coarse_label"]],
+                    "src": "trec",
+                }
+            },
+        }
+        for example in _sample(dataset, count, rng)
+    ]
+
+
+def _dbpedia14(split: str, count: int, rng: random.Random) -> list[dict[str, Any]]:
+    dataset = _dataset(DATASETS["dbpedia14"], split)
+    names = [name.lower().replace(" ", "_") for name in dataset.features["label"].names]
+    return [
+        {
+            "state": _wrap_state(" ".join(example["content"].split()[:200]), rng),
+            "questions": {
+                "category": {
+                    "type": "choice",
+                    "instructions": "Which category does the subject of this encyclopedia text belong to?",
+                    "criteria": {name: None for name in names},
+                    "label": names[example["label"]],
+                    "src": "dbpedia14",
+                }
+            },
+        }
+        for example in _sample(dataset, count, rng)
+    ]
+
+
+def _imdb(split: str, count: int, rng: random.Random) -> list[dict[str, Any]]:
+    dataset = _dataset(DATASETS["imdb"], split)
+    return [
+        {
+            "state": _wrap_state(
+                " ".join(example["text"].replace("<br />", " ").split()[:220]), rng
+            ),
+            "questions": {
+                "positive": {
+                    "type": "noul",
+                    "instructions": "Is this movie review positive?",
+                    "criteria": {
+                        "true": "The reviewer liked the film overall",
+                        "false": "The reviewer disliked the film overall",
+                    },
+                    "label": example["label"] == 1,
+                    "src": "imdb",
+                }
+            },
+        }
+        for example in _sample(dataset, count, rng)
+    ]
+
+
+def _amazon(split: str, count: int, rng: random.Random) -> list[dict[str, Any]]:
+    dataset = _dataset(DATASETS["amazon"], split)
+    return [
+        {
+            "state": _wrap_state(" ".join(example["text"].split()[:220]), rng),
+            "questions": {
+                "stars": {
+                    "type": "score",
+                    "instructions": "How many stars did this product reviewer give?",
+                    "criteria": list(AMAZON),
+                    "label": example["label"],
+                    "src": "amazon",
+                }
+            },
+        }
+        for example in _sample(dataset, count, rng)
+    ]
+
+
+def _mcq(
+    question_text: str,
+    option_labels: list[str],
+    option_texts: list[str],
+    answer_label: str,
+    source: str,
+    rng: random.Random,
+) -> dict[str, Any]:
+    """Turn a knowledge multiple-choice row into a neutral-key choice request."""
+    order = list(range(len(option_texts)))
+    rng.shuffle(order)
+    keys = [f"option_{index + 1}" for index in range(len(option_texts))]
+    criteria = {key: option_texts[index] for key, index in zip(keys, order)}
+    label = keys[order.index(option_labels.index(answer_label))]
+    return {
+        "state": {"question": question_text},
+        "questions": {
+            "answer": {
+                "type": "choice",
+                "instructions": "Which option correctly answers the question?",
+                "criteria": criteria,
+                "label": label,
+                "src": source,
+            }
+        },
+    }
+
+
+def _arc(split: str, count: int, rng: random.Random) -> list[dict[str, Any]]:
+    dataset = _dataset(DATASETS["arc"], split)
+    return [
+        _mcq(
+            example["question"],
+            list(example["choices"]["label"]),
+            list(example["choices"]["text"]),
+            example["answerKey"],
+            "arc",
+            rng,
+        )
+        for example in _sample(dataset, count, rng)
+    ]
+
+
+def _openbookqa(split: str, count: int, rng: random.Random) -> list[dict[str, Any]]:
+    dataset = _dataset(DATASETS["openbookqa"], split)
+    return [
+        _mcq(
+            example["question_stem"],
+            list(example["choices"]["label"]),
+            list(example["choices"]["text"]),
+            example["answerKey"],
+            "openbookqa",
+            rng,
+        )
+        for example in _sample(dataset, count, rng)
+    ]
+
+
+def _csqa(split: str, count: int, rng: random.Random) -> list[dict[str, Any]]:
+    dataset = _dataset(DATASETS["csqa"], split)
+    return [
+        _mcq(
+            example["question"],
+            list(example["choices"]["label"]),
+            list(example["choices"]["text"]),
+            example["answerKey"],
+            "csqa",
+            rng,
+        )
+        for example in _sample(dataset, count, rng)
+        if example["answerKey"]
+    ]
+
+
 BUILDERS = {
     "banking77": _banking,
     "boolq": _boolq,
@@ -278,6 +457,13 @@ BUILDERS = {
     "sst5": _sst5,
     "yelp": _yelp,
     "financial_phrasebank": _financial_phrasebank,
+    "trec": _trec,
+    "dbpedia14": _dbpedia14,
+    "imdb": _imdb,
+    "amazon": _amazon,
+    "arc": _arc,
+    "openbookqa": _openbookqa,
+    "csqa": _csqa,
 }
 SPLITS = {
     "banking77": ("train", "test"),
@@ -287,6 +473,13 @@ SPLITS = {
     "sst5": ("train", "test"),
     "yelp": ("train", "test"),
     "financial_phrasebank": ("train", "test"),
+    "trec": ("train", "test"),
+    "dbpedia14": ("train", "test"),
+    "imdb": ("train", "test"),
+    "amazon": ("train", "test"),
+    "arc": ("train", "test"),
+    "openbookqa": ("train", "test"),
+    "csqa": ("train", "validation"),
 }
 
 

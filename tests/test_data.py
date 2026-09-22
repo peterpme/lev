@@ -1,6 +1,31 @@
 import random
 
-from lev.data import DATASETS, BUILDERS, augment, materialize, render_value
+from lev.data import DATASETS, BUILDERS, _mcq, augment, materialize, render_value
+
+
+def test_expanded_source_loaders_are_registered():
+    assert {
+        "trec",
+        "dbpedia14",
+        "imdb",
+        "amazon",
+        "arc",
+        "openbookqa",
+        "csqa",
+    } <= set(BUILDERS)
+
+
+def test_mcq_conversion_shuffles_text_but_preserves_answer():
+    record = _mcq(
+        "Which color is the sky?",
+        ["A", "B", "C"],
+        ["blue", "green", "red"],
+        "A",
+        "toy",
+        random.Random(3),
+    )
+    question = record["questions"]["answer"]
+    assert question["criteria"][question["label"]] == "blue"
 
 
 def request() -> dict:
