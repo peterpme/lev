@@ -77,6 +77,7 @@ def evaluate(run: Path, suite: Path, device: str) -> dict:
     brier_scores: list[float] = []
     latencies: list[float] = []
     probability_sum_errors: list[float] = []
+    by_source: dict[str, dict[str, float]] = {}
 
     for record in records:
         encoded = encode(tokenizer, record)
@@ -93,6 +94,13 @@ def evaluate(run: Path, suite: Path, device: str) -> dict:
         confidences.append(confidence)
         correct.append(int(predicted == label))
         losses.append(-math.log(max(values[label], 1e-9)))
+        source = record["questions"][0].get("src", "unknown")
+        source_metrics = by_source.setdefault(
+            source, {"records": 0, "correct": 0, "loss": 0.0}
+        )
+        source_metrics["records"] += 1
+        source_metrics["correct"] += int(predicted == label)
+        source_metrics["loss"] += losses[-1]
         target = [1.0 if index == label else 0.0 for index in range(len(values))]
         brier_scores.append(
             sum((value - expected) ** 2 for value, expected in zip(values, target))
@@ -123,6 +131,14 @@ def evaluate(run: Path, suite: Path, device: str) -> dict:
         },
         "max_probability_sum_error": max(probability_sum_errors),
         "latency_ms": {"median": sorted(latencies)[len(latencies) // 2]},
+        "by_source": {
+            source: {
+                "records": int(metrics["records"]),
+                "accuracy": metrics["correct"] / metrics["records"],
+                "nll": metrics["loss"] / metrics["records"],
+            }
+            for source, metrics in sorted(by_source.items())
+        },
         "suite_sha256": file_sha256(suite / "manifest.json"),
         "test_sha256": manifest["test_sha256"],
     }
