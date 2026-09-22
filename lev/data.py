@@ -19,6 +19,7 @@ DATASETS = {
     "mnli": "nyu-mll/multi_nli",
     "sst5": "SetFit/sst5",
     "yelp": "Yelp/yelp_review_full",
+    "financial_phrasebank": "atrost/financial_phrasebank",
 }
 
 QUESTION_TEXT = "Which banking intent best describes this customer message?"
@@ -54,6 +55,7 @@ YELP = [
     "4 stars: good",
     "5 stars: excellent",
 ]
+FINANCE_SENTIMENT = ["negative", "neutral", "positive"]
 
 
 def _dataset(repo: str, split: str):
@@ -241,6 +243,33 @@ def _yelp(split: str, count: int, rng: random.Random) -> list[dict[str, Any]]:
     return output
 
 
+def _financial_phrasebank(split: str, count: int, rng: random.Random) -> list[dict[str, Any]]:
+    """Load finance-specific three-way sentiment as a Choice task."""
+    output = []
+    for example in _sample(_dataset(DATASETS["financial_phrasebank"], split), count, rng):
+        output.append(
+            {
+                "state": _wrap_state(example["sentence"], rng),
+                "questions": {
+                    "sentiment": {
+                        "type": "choice",
+                        "instructions": _instructions(
+                            "What is the sentiment of this financial statement?", rng
+                        ),
+                        "criteria": {
+                            "negative": "The statement expresses a negative financial view",
+                            "neutral": "The statement is factual or emotionally neutral",
+                            "positive": "The statement expresses a positive financial view",
+                        },
+                        "label": FINANCE_SENTIMENT[example["label"]],
+                        "src": "financial_phrasebank",
+                    }
+                },
+            }
+        )
+    return output
+
+
 BUILDERS = {
     "banking77": _banking,
     "boolq": _boolq,
@@ -248,6 +277,7 @@ BUILDERS = {
     "mnli": _mnli,
     "sst5": _sst5,
     "yelp": _yelp,
+    "financial_phrasebank": _financial_phrasebank,
 }
 SPLITS = {
     "banking77": ("train", "test"),
@@ -256,6 +286,7 @@ SPLITS = {
     "mnli": ("train", "validation_matched"),
     "sst5": ("train", "test"),
     "yelp": ("train", "test"),
+    "financial_phrasebank": ("train", "test"),
 }
 
 

@@ -81,6 +81,17 @@ This trains 40 records from each source for one epoch by default. The loaders
 and internal question types are implemented; the public API currently exposes
 the same three types, with `choice` being the simplest path to try first.
 
+For a finance-specific experiment, Financial PhraseBank is also available as
+an optional source:
+
+```bash
+LEV_SOURCES=banking77,financial_phrasebank \
+  ./scripts/train-background.sh runs/banking-finance-smoke
+```
+
+It contributes three-way financial sentiment examples (`negative`, `neutral`,
+and `positive`). It remains optional until the six-source benchmark is measured.
+
 ### 2. Start the API
 
 ```bash

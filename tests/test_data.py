@@ -1,6 +1,6 @@
 import random
 
-from lev.data import augment, materialize, render_value
+from lev.data import DATASETS, BUILDERS, augment, materialize, render_value
 
 
 def request() -> dict:
@@ -47,3 +47,8 @@ def test_render_value_keeps_structure_labels():
     assert render_value({"ticket": {"channel": "chat", "body": "hello"}}) == (
         "ticket:\n  channel: chat\n  body: hello"
     )
+
+
+def test_finance_phrasebank_is_a_supported_choice_source():
+    assert DATASETS["financial_phrasebank"] == "atrost/financial_phrasebank"
+    assert "financial_phrasebank" in BUILDERS

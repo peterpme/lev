@@ -488,3 +488,14 @@ suites, then try controlled Banking77 variants (three epochs and a lower
 learning rate) one at a time. Checkpoints and reports stay under ignored
 `runs/`; committed benchmark suites and experiment summaries remain the durable
 record.
+
+## 2026-09-21 — optional finance source
+
+Verified that `atrost/financial_phrasebank` loads cleanly through the same
+Hugging Face `datasets` API. It has `sentence` plus a three-way label
+(`negative`, `neutral`, `positive`), so it maps directly to Lev's existing
+`choice` representation without inventing a new model head. Added it as the
+optional `financial_phrasebank` source and documented a small smoke command.
+The six-source Kev comparison remains the primary experiment; this finance
+source will be evaluated separately so it cannot silently distort the locked
+Banking77 result.
