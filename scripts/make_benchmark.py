@@ -6,7 +6,12 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from pathlib import Path
+
+# Running a file under scripts/ puts that directory first on sys.path. Add the
+# repository root so the command works exactly as documented from a clone.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from lev.data import build, materialize
 
